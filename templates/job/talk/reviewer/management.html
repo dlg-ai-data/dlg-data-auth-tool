@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'job:talk_reviewer_management' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-grass"
+                                id="talk-reviewer-list-excel"
+                                title="talk 리뷰어 엑셀"
+                                data-trigger="hover"
+                                data-toggle="tooltip">
+                            <i class="fas fa-download pr-0 pl-1"></i>
+                        </button>
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">데이터세트</label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="dataset_id" id="select_dataset_name" multiple data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="전체" blank_value="all" project_type="AH01" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 display_block">등급: </label>
+                                <select class="form-control w-100px pr-0 pl-0 selectpicker" name="grade"
+                                        id="select_grade">
+                                    {% tag_options_text_choices class_name='MemberGrade' value=selected_grade blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입경로: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" name="join_source"
+                                        id="select_join_source">
+                                    {% tag_options_text_choices class_name='member_join_source' value=selected_join_source blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입일자 </label>
+                                <div class='input-group w-205px' id='dateRangePicker_join_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="join_date" id="set_join_date"
+                                           value="{{ join_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">수정일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_modf_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="modf_date" id="set_modf_date"
+                                           value="{{ modf_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">검수일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_inspection_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="inspection_date" id="set_inspection_date"
+                                           value="{{ inspection_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">제한여부: </label>
+                                <select class="form-control w-70px pr-0 pl-0 selectpicker" name="limit_yn"
+                                        id="select_limit_yn">
+                                    {% tag_options_text_choices class_name='UseType' value=selected_limit_yn blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="리뷰어 이메일, 이름 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if searched_word is not None and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                    <input type="hidden" name="sort_criterion" id="sort_criterion" value="{{ sort_criterion }}">
+                    <input type="hidden" name="upDown" id="upDown" value="{{ upDown }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="ddatatable-default">
+                        <div style="min-height: 961px">
+                            <table class="mb-0 table min-w-1245px">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th rowspan="2"
+                                        class="sort sort_default"
+                                        data-sort-criterion="id"
+                                        data-upDown="">
+                                        #
+                                    </th>
+                                    <th rowspan="2"
+                                        class="sort sort_default"
+                                        data-sort-criterion="dataset_name"
+                                        data-upDown="">
+                                        데이터세트명
+                                    </th>
+                                    <th rowspan="2"
+                                        class="sort sort_default"
+                                        data-sort-criterion="dataset_name"
+                                        data-upDown="">
+                                        리뷰유형
+                                    </th>
+                                    <th colspan="5" class="pt05rem_pb05rem">리뷰어 정보</th>
+                                    <th rowspan="2"
+                                        class="sort sort_default"
+                                        data-sort-criterion="total_count"
+                                        data-upDown="">
+                                        전체 건수
+                                    </th>
+                                    <th colspan="2" class="pt05rem_pb05rem" style="border-left: none !important;">검수 집계
+                                        (개 / %)
+                                    </th>
+                                    <th rowspan="2"
+                                        class="sort sort_default_middle"
+                                        data-sort-criterion="limit_count"
+                                        data-upDown="">
+                                        작업제한량<br>(일일)<br><span style="color: white !important; position: relative; left: 8px;">0 : 무제한</span>
+                                    </th>
+                                    <th rowspan="2">작업<br>제한여부<br>Y : 작업불가</th>
+                                    <th rowspan="2">Actions</th>
+                                </tr>
+                                <tr>
+                                    <th class="sort sort_default sub_th"
+                                        data-sort-criterion="email"
+                                        data-upDown="">
+                                        이메일
+                                    </th>
+                                    <th class="sort sort_default sub_th"
+                                        data-sort-criterion="name"
+                                        data-upDown="">
+                                        이름
+                                    </th>
+                                    <th class="sort sort_default sub_th"
+                                        data-sort-criterion="tel_no"
+                                        data-upDown="">
+                                        연락처
+                                    </th>
+                                    <th class="pt-0 pb-0 sort sort_default sub_th"
+                                        data-sort-criterion="project_grade"
+                                        data-upDown="">
+                                        등급
+                                    </th>
+                                    <th class="sort sort_default sub_th"
+                                        data-sort-criterion="join_source"
+                                        data-upDown="">
+                                        가입경로
+                                    </th>
+                                    <th class="sort sort_default sub_th min-w-120px"
+                                        data-sort-criterion="complete_count"
+                                        data-upDown="">
+                                        승인
+                                    </th>
+                                    <th class="sort sort_default sub_th min-w-120px"
+                                        data-sort-criterion="accumulated_reject_count"
+                                        data-upDown="">
+                                        반려(누적)
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center" id="table_pagenation">
+
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        set_daterangepicker('#dateRangePicker_join_date', {title: '가입일자 필터', maxDate: new Date()});
+        set_daterangepicker('#dateRangePicker_modf_date', {title: '수정일자 필터', maxDate: new Date()});
+        set_daterangepicker('#dateRangePicker_inspection_date', {title: '검수일자 필터', maxDate: new Date()});
+
+        $(document).ready(function () {
+            $('#table_spinner').css('left', $('table').width() / 2 - 16);
+            $('#table_spinner').css('top', $('table').height() / 2);
+            async_get_table_tr_html();
+        });
+        const changed_record_idx_set = new Set();
+
+        // 하나의 tr의 변경을 감지함.
+        const detect_tr_change = (tr) => {
+            const row_num = tr.find("td.row_num").text();
+            if (row_num === "")
+                return;
+            const idx = row_num >= 16 ? row_num - 16 * ({{ page }} -1) + 1 : row_num - 1;
+            const origin_job_limit_count = Number(tr.find("input.job_limit_count").data('limit-count'));
+            const entered_job_limit_count = Number(tr.find("input.job_limit_count").val());
+
+            const origin_job_limit_yn = tr.find("select.job_limit_yn").data("limit-yn");
+            const selected_job_limit_yn = tr.find("select.job_limit_yn").val();
+
+            let is_changed = false;
+
+            if (origin_job_limit_count !== entered_job_limit_count)
+                is_changed = true
+
+            if (origin_job_limit_yn !== selected_job_limit_yn)
+                is_changed = true
+
+            if (!is_changed) { // 수정 버튼 비활성
+                tr.find('.actions-btn').attr('disabled', true);
+                tr.find('.actions-btn').removeClass('btn-light-skype');
+                tr.find('.actions-btn').addClass('btn-secondary');
+                changed_record_idx_set.delete(idx)
+            } else {
+                tr.find('.actions-btn').attr('disabled', false);
+                tr.find('.actions-btn').addClass('btn-light-skype');
+                tr.find('.actions-btn').removeClass('btn-secondary');
+                changed_record_idx_set.add(idx)
+            }
+
+            if (changed_record_idx_set.size > 0) {
+                $(".all_save-btn").attr('disabled', false);
+                $(".all_save-btn").addClass('btn-skype');
+                $(".all_save-btn").removeClass('btn-secondary');
+            } else {
+                $(".all_save-btn").attr('disabled', true);
+                $(".all_save-btn").addClass('btn-secondary');
+                $(".all_save-btn").removeClass('btn-skype');
+            }
+        }
+
+        // 한 번에 모든 tr의 변경을 감지
+        const detect_all_tr_change = () => {
+            for (let count = 0; count < 15; count++) {
+                const tr = $($('.record')[count]);
+                if (tr.val() === undefined) {
+                    break;
+                }
+                detect_tr_change(tr)
+            }
+        }
+
+        $(document).on("change", "input.job_limit_count, select.job_limit_yn", (e) => {
+            const tr = $(e.currentTarget).parents('tr')
+            detect_tr_change(tr)
+        })
+
+        $(document).on('input','.all_job_limit_count', (e) => {
+            const target = $(e.currentTarget);
+            if (Number(target.val()) > 10000) {
+                // 초과하면 변경하지 않고 입력 취소
+                target.val(target.val().slice(0, -1));
+            } else {
+                // 변경
+                $('.job_limit_count').val(target.val())
+            }
+            detect_all_tr_change()
+        });
+
+
+        $(document).on('input', '.job_limit_count', (e) => {
+            const target = $(e.currentTarget);
+            const tr = target.parents("tr");
+            if (target.val() !== "") {
+                if (Number(target.val()) > 10000)
+                    target.val(target.val().slice(0, -1));
+            }
+            detect_tr_change(tr)
+        });
+
+
+        // 전체 limit_count를 조정해주는 input이 포커스 잃었을 때
+        $(document).on('focusout', '.all_job_limit_count', function(e){
+            const target = $(e.currentTarget);
+            // 포커싱을 잃었는데, value 가 ""라면 0을 넣어주고 개별 limit_count 값을 원래의 값으로 돌아감.
+            if (target.val() === "") {
+                target.val(0);
+                for (let count = 0; count < 15; count++) {
+                    $($('.job_limit_count')[count]).val($($('.job_limit_count')[count])[0].dataset['limitCount'])
+                }
+            }
+            detect_all_tr_change();
+        });
+
+
+        // 개별 limit_count를 조정해주는 input이 포커스 잃었을 때
+        $(document).on('focusout', '.job_limit_count', function(e) {
+            const target = $(e.currentTarget);
+            const tr = target.parents("tr");
+            if (target.val() === "") {
+                target.val(0);
+            }
+            detect_tr_change(tr);
+        });
+
+        // 일괄 제한여부 변경 selct 변경감지
+        $(document).on('change','.all_job_limit_yn', function () {
+            if ($(".all_job_limit_yn option:selected").text() === "선택") {
+                for (let count = 1; count < 30; count += 2) {
+                    $($('.job_limit_yn')[count]).selectpicker('val', $($('.job_limit_yn')[count]).data("limit-yn"));
+                }
+            } else if ($(".all_job_limit_yn option:selected").text() === "Y") {
+                $('.job_limit_yn').selectpicker('val', "Y");
+            } else if ($(".all_job_limit_yn option:selected").text() === "N") {
+                $('.job_limit_yn').selectpicker('val', "N");
+            }
+            detect_all_tr_change();
+        });
+
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+        $("#set_join_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_modf_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_inspection_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_limit_yn').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_join_source').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+        $('#select_grade').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#talk-reviewer-list-excel").click(function () {
+            const dataset_ids = $('#select_dataset_name').val();
+            const join_source = $("#select_join_source option:selected").val();
+            const join_date = $("#set_join_date").val();
+            const modf_date = $("#set_modf_date").val();
+            const inspection_date = $("#set_inspection_date").val();
+            const limit_yn = $("#select_limit_yn option:selected").val();
+            const searched_word = $("#table-data-search").val();
+            const selected_grade = $('#select_grade').val();
+            const sort_criterion = $("#sort_criterion").val();
+            const upDown = $("#upDown").val();
+
+            // 엑셀 쿼리스트링 만드는 곳
+            const params = {dataset_id: dataset_ids, join_source, join_date, modf_date, inspection_date, limit_yn, searched_word, selected_grade, sort_criterion, upDown};
+            const qs = jQuery.param(params, true);
+
+            window.open('{% url 'job:talk_reviewer_list_excel' %}?' + qs)
+        });
+
+        // 비동기적으로 데이터 조회 후 html에 바인딩하여 생성한 것을 화면에 연결
+        const async_get_table_tr_html = () => {
+            const dataset_ids = $('#select_dataset_name').val();
+            const join_source = $("#select_join_source option:selected").val();
+            const join_date = $("#set_join_date").val();
+            const modf_date = $("#set_modf_date").val();
+            const inspection_date = $("#set_inspection_date").val();
+            const reviewer_info = $("#table-data-search").val();
+            const limit_yn = $("#select_limit_yn option:selected").val();
+            const grade = $("#select_grade option:selected").val();
+            const word = $('#searched_word').val();
+            const page=1
+            const spinner = $('#table_spinner');
+            const table = $('table');
+            const tbody = $('tbody');
+            const table_pagenation = $('#table_pagenation');
+            const fail_html = '<tr style="height: 800px !important; background-color: #fff9f1;"><td colspan="100">필터링 조건에 맞는 데이터가 없습니다.</td></tr>'
+            $.ajax({
+                url: '{% url 'job:get_talk_reviewer_management_tbody_html' %}',
+                type: "POST",
+                data: {dataset_id: dataset_ids, join_source, reviewer_info, join_date, modf_date, inspection_date ,limit_yn,word, grade, page},
+                beforeSend: function () {
+                    spinner.css('left', $('table').width() / 2 - 16);
+                    spinner.css('top', $('table').height() / 2);
+                    spinner.css('visibility', 'visible');
+                    table.css('opacity', 0.6);
+                },
+                success: function (result) {
+                    const filter_text_dataset = result.dataset_names;
+
+                    if (result.total_count !== 0) {
+                        spinner.css('visibility', 'hidden');
+                        table.css('opacity', 1);
+                        tbody.empty();
+                        tbody.append(result.html);
+                        table_pagenation.empty();
+                        table_pagenation.append(result.pagenation_html);
+                    } else {
+                        spinner.css('visibility', 'hidden');
+                        table.css('opacity', 1);
+                        tbody.empty();
+                        tbody.append(fail_html);
+                        table_pagenation.empty();
+                    }
+                }
+            })
+        };
+
+        $(function () {
+            $('#search_dataset').selectpicker();
+            $('#select_limit_yn').selectpicker();
+
+            // 개별 저장
+            $(document).on('click', '.save-btn', function(e) {
+
+                const tr = $(e.currentTarget).parents("tr");
+                const row_num = $(e.currentTarget).parents("tr").find("td.row_num").text();
+                const completed_idx = row_num >= 16 ? row_num - 16 * ({{ page }} -1) + 1 : row_num - 1;
+
+                const reviewer_id = $(this).parents("tr").find("[name='reviewer_id']").val();
+                const job_limit_count = $(this).parents("tr").find("[name='job_limit_count']").val();
+                const job_limit_yn = $(this).parents("tr").find("[name='job_limit_yn']").val();
+
+                const save_btn = $(e.currentTarget);
+                swalWithBootstrapButtons.fire({
+                    title: '제한 정보 저장',
+                    text: "정말 저장하시겠습니까?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '저장',
+                    cancelButtonText: '취소',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{% url 'job:talk_reviewer_limit_modify' %}',
+                            method: 'GET',
+                            data: {
+                                reviewer_id: reviewer_id,
+                                job_limit_count: job_limit_count,
+                                job_limit_yn: job_limit_yn,
+                            },
+                            success: function (data) {
+                                if (data.result == true) {
+                                    swalFire("저장 성공", "정보가 변경되었습니다.", "success", "확인").then(() => {
+                                        tr.find("input.job_limit_count").data('limit-count', data.new_data[0]);
+                                        tr.find("input.job_limit_count").attr('data-limit-count', data.new_data[0]);
+                                        tr.find("select.job_limit_yn").data("limit-yn", data.new_data[1]);
+                                        tr.find("select.job_limit_yn").attr('data-limit-yn', data.new_data[1]);
+
+                                        save_btn.addClass('btn-secondary');
+                                        save_btn.removeClass('btn-light-skype');
+                                        save_btn.prop("disabled", true);
+
+                                        changed_record_idx_set.delete(completed_idx)
+                                        if (changed_record_idx_set.size > 0) {
+                                            $(".all-s").attr('disabled', false);
+                                            $(".all-save-btn").addClass('btn-skype');
+                                            $(".all-save-btn").removeClass('btn-secondary');
+                                        } else {
+                                            $(".all-save-btn").attr('disabled', true);
+                                            $(".all-save-btn").addClass('btn-secondary');
+                                            $(".all-save-btn").removeClass('btn-skype');
+                                        }
+                                    });
+                                } else {
+                                    swalFire("저장 실패", data.error, "error", "확인");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            // 일괄 저장
+            $(document).on('click', ".all_save-btn", function () {
+                let to_be_changed_items = []
+                for (let count = 0; count < 15; count++) {
+                    const tr = $($(".record")[count]);
+                    const reviewer_id = tr.find("[name='reviewer_id']").val();
+                    if (!reviewer_id)
+                        break;
+                    const job_limit_count = tr.find("[name='job_limit_count']").val();
+                    const job_limit_yn = tr.find("[name='job_limit_yn']").val();
+                    to_be_changed_items.push({reviewer_id, job_limit_count, job_limit_yn})
+                }
+                const data = {"to_be_changed_items": to_be_changed_items}
+                data['to_be_changed_items'] = JSON.stringify(data['to_be_changed_items'])
+
+                swalWithBootstrapButtons.fire({
+                    title: '제한 정보 일괄 저장',
+                    text: "정말 일괄 저장하시겠습니까?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '저장',
+                    cancelButtonText: '취소',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{% url 'job:talk_reviewer_limit_modify' %}',
+                            method: 'POST',
+                            data: data,
+                            success: function (data) {
+                                if (data.result == true) {
+                                    swalFire("일괄 저장 성공", "정보가 일괄 저장되었습니다.", "success", "확인").then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    swalFire("일괄 저장 실패", data.error, "error", "확인");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

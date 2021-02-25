@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'member:list' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div row">
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-skype ml-7px"
+                                id="member-list-register-btn"
+                                onClick="location.href='/member/register'"
+                                title="회원등록"
+                                data-trigger="hover"
+                                data-toggle="tooltip">
+                            <i class="fas fa-user-plus pr-0 pl-1"></i>
+                        </button>
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-grass ml-3"
+                                id="member-list-excel"
+                                title="회원목록 엑셀"
+                                data-toggle="tooltip"
+                                data-trigger="hover"
+                                onclick="downloadExcel_memberList('{% url 'member:member_list_excel' %}')">
+                            <i class="fas fa-download pr-0 pl-1"></i>
+                        </button>
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입경로: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" name="join_source"
+                                        id="select_join_source">
+                                    {% tag_options_text_choices class_name='member_join_source' value=selected_join_source blank_option=True blank_text="전체" blank_value="all" unregistered_option=True %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_join_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="join_date" id="set_join_date"
+                                           value="{{ join_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="이메일, 이름, 메모 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if isSearched and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=200 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 900px">
+                            <table class="mb-0 table" style="min-width: 985px !important;">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th rowspan="2">#</th>
+                                    <th rowspan="2">이메일</th>
+                                    <th rowspan="2">이름</th>
+                                    <th rowspan="2" class="w-120px">연락처</th>
+                                    <th rowspan="2">가입경로</th>
+                                    <th rowspan="2">회원메모</th>
+                                    <th colspan="3" class="pt05rem_pb05rem">입력여부확인</th>
+                                    <th rowspan="2" class="w-100px">가입일자</th>
+                                    <th rowspan="2" class="w-100px">변경일자</th>
+                                    <th rowspan="2">Actions</th>
+                                </tr>
+                                <tr>
+                                    <th class="sub_th w-66px">부가정보</th>
+                                    <th class="sub_th w-66px">은행정보</th>
+                                    <th class="sub_th w-66px">이력서</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if user_count != 0 %}
+                                    {% for someone in all_users %}
+                                        <tr {% if forloop.last and blank_count > 0 %}
+                                            class="thick_bottom_border" {% endif %}>
+                                            <td>{{ forloop.counter0|page_seq_print:all_users }}</td>
+                                            <td class="thick_left_border">{{ someone.email }}</td>
+                                            <td>{{ someone.name }}</td>
+                                            <td>
+                                                {% advanced_default_if_none value=someone.tel_no default_text="미입력" %}
+                                            </td>
+                                            <td>
+                                                {% advanced_default_if_none value=someone.memberaddition2member.get_member_join_source_display default_text="미등록" %}
+                                            </td>
+                                            <td>
+                                                {% advanced_default_if_none value=someone.memberaddition2member.memo default_text="미입력" %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% if someone.memberaddition2member == None or someone.memberaddition2member.age_code == None %}
+                                                    {% advanced_default_if_none value=None default_text="미입력" %}
+                                                {% else %}
+                                                    입력완료
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if someone.memberaddition2member == None or someone.memberaddition2member.bank_no == None %}
+                                                    {% advanced_default_if_none value=None default_text="미입력" %}
+                                                {% else %}
+                                                    입력완료
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if someone.memberaddition2member == None or someone.memberaddition2member.resume_file == None %}
+                                                    {% advanced_default_if_none value=None default_text="미첨부" %}
+                                                {% else %}
+                                                    첨부완료
+                                                {% endif %}
+                                            </td>
+                                            <td class="two_line_date thick_left_border">{{ someone.join_date | date:'Y-m-d (H:i)' }}</td>
+                                            <td class="two_line_date">{{ someone.modf_date | date:'Y-m-d (H:i)' }}</td>
+                                            <td class="thick_left_border">
+                                                <button type="button" title="회원 정보 추가 및 수정" data-toggle="tooltip"
+                                                        data-trigger="hover"
+                                                        class="btn actions-btn user-update-btn btn-light-linkedin"
+                                                        onclick="location.href='/member/{{ someone.id }}/modify/'">
+                                                    <i class="fas fa-user-edit"></i>
+                                                </button>
+{#                                                <button type="button" data-id="{{ someone.id }}"#}
+{#                                                        title="추가 정보 승인" data-toggle="tooltip" data-trigger="hover"#}
+{#                                                        class="btn actions-btn btn-light-success user-info-approve-btn"#}
+{#                                                        onclick="approveMember(this, '{% url 'member:member_approve' %}')"#}
+{#                                                        {% if someone.memberaddition2member.adm_yn == "Y" %}#}
+{#                                                        disabled {% endif %}>#}
+{#                                                    <i class="fas fa-user-check"></i>#}
+{#                                                </button>#}
+                                                <button type="button" data-id="{{ someone.id }}" title="회원 정보 삭제"
+                                                        data-toggle="tooltip" data-trigger="hover"
+                                                        class="btn actions-btn user-delete-btn btn-light-instagram"
+                                                        onclick="deleteMember(this, '{% url 'member:member_delete' %}')"
+                                                >
+                                                    <i class="fas fa-user-times"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% for i in "x"|rjust:blank_count %}
+                                        {% if blank_count != 0 %}
+                                            <tr></tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 855px !important;">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=200 search_fail_message="검색은 이메일과 이름에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                <tr class="table_end">
+                                    <td colspan="20" class="blr6px brr6px"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=all_users paginator_range=paginator_range total_count=user_count %}
+        </div>
+    </div>
+    <script src="{% static 'js/pages/member/member_list.js' %}"></script>
+{% endblock %}

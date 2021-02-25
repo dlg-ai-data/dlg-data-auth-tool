@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'job:talk_provider_record' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <div class="mr-3 row justify-content-between w-100">
+                            <div class="row ml-14px">
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">데이터세트</label>
+                                    <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                            name="dataset_ids" id="select_dataset_name" multiple data-selected-text-format="count">
+                                        {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="전체" blank_value="all" project_type="AH03" %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">제공일자: </label>
+                                    <div class='input-group w-205px' id='dateRangePicker_reg_date'>
+                                        <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                               name="reg_date" id="set_reg_date"
+                                               value="{{ job_date|default_if_none:"" }}"/>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">대화제공자 정보 검색: </label>
+                                    <div class="input-icon mt-auto">
+                                        <input type="search" class="form-control" placeholder="Search..."
+                                               id="search_provider_info" name="provider_info"
+                                               title="어노테이터 이름, 연락처 검색"
+                                               data-trigger="click"
+                                               data-toggle="tooltip"
+                                               autocomplete="off"
+                                               value="{{ searched_provider_info_word|default_if_none:"" }}"/>
+                                        <span class="search-span">
+                                        <i class="flaticon2-search-1 text-muted"></i>
+                                    </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div>
+                                    <label class="mb-0 mr-4 display_block">검수상태: </label>
+                                    <select class="form-control w-110px pr-0 pl-0 selectpicker" name="inspectionStatus"
+                                            id="select_inspectionStatus">
+                                        {% tag_options_text_choices class_name='InspectionStatus' value=selected_inspectionStatus blank_option=True blank_text="전체" blank_value="all" %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mr-0">
+                                <div>
+                                    <label class="mb-0 mr-4 display_block">주제 문자열 검색: </label>
+                                    <div class="input-icon mt-auto">
+                                        <input type="search" class="form-control" placeholder="Search..."
+                                               id="search_domain" name="domain"
+                                               autocomplete="off"
+                                               value="{{ searched_domain_word|default_if_none:"" }}"/>
+                                        <span class="search-span">
+                                        <i class="flaticon2-search-1 text-muted"></i>
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">분류 문자열 검색: </label>
+                                    <div class="input-icon mt-auto">
+                                        <input type="search" class="form-control" placeholder="Search..."
+                                               id="search_category" name="category"
+                                               autocomplete="off"
+                                               value="{{ searched_category_word|default_if_none:"" }}"/>
+                                        <span class="search-span">
+                                        <i class="flaticon2-search-1 text-muted"></i>
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">대화 문자열 검색: </label>
+                                    <div class="input-icon mt-auto">
+                                        <input type="search" class="form-control" placeholder="Search..."
+                                               id="search_talk" name="talk"
+                                               autocomplete="off"
+                                               value="{{ searched_talk_word|default_if_none:"" }}"/>
+                                        <span class="search-span">
+                                        <i class="flaticon2-search-1 text-muted"></i>
+                                    </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if searched_word is not None and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div>
+                            <table class="mb-0 table" style="min-width: 1600px;">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th rowspan="2">#</th>
+                                    <th rowspan="2">데이터세트명</th>
+                                    <th colspan="3" class="pt05rem_pb05rem">대화제공자</th>
+                                    <th colspan="2" class="pt05rem_pb05rem">리뷰어</th>
+                                    <th rowspan="2">주제</th>
+                                    <th rowspan="2">분류</th>
+                                    <th rowspan="2">대화조각원문</th>
+                                    <th rowspan="2">반려메시지</th>
+                                </tr>
+                                <tr>
+                                    <th class="sub_th w-100px">제출일자</th>
+                                    <th class="sub_th">이름</th>
+                                    <th class="sub_th w-120px">연락처</th>
+                                    <th class="sub_th w-100px">검수상태</th>
+                                    <th class="sub_th w-100px">검수일자</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if total_count != 0 %}
+                                    {% for item in jobtalksource_list %}
+                                        <tr class="talk_tr_{{ forloop.counter0|calc_divide:1|page_seq_print:jobtalksource_list }}">
+                                            <td>{{ forloop.counter0|calc_divide:1|page_seq_print:jobtalksource_list }}</td>
+                                            <td class="thick_left_border">{{ item.dataset.dataset_name }}</td>
+                                            <td class="thick_left_border" {% if item.job_date is not None %}class="two_line_date" {% endif %}>
+                                                {% advanced_default_if_none value=item.reg_date default_text="-" filter='Y-m-d (H:i)' %}
+                                            </td>
+                                            <td>{{ item.provider.member.name }}</td>
+                                            <td>
+                                                {% advanced_default_if_none value=item.provider.member.tel_no default_text="미등록" %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% if item.inspection_status == "AL01" %}
+                                                    <span class="label label-inline label-secondary w-63-5px">초기</span>
+                                                {% elif item.inspection_status == "AL02" %}
+                                                    <span class="label label-inline label-light-warning w-63-5px">반려</span>
+                                                {% elif item.inspection_status == "AL03" %}
+                                                    <span class="label label-inline label-light-success w-63-5px">승인</span>
+                                                {% elif item.inspection_status == "AL04" %}
+                                                    <span class="label label-inline label-light-danger w-63-5px">불가</span>
+                                                {% endif %}
+                                            </td>
+                                            <td {% if item.inspection_date is not None %}class="two_line_date" {% endif %}>
+                                                {% advanced_default_if_none value=item.inspection_date default_text="검수 전" filter='Y-m-d (H:i)' %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% advanced_default_if_none value=item.domain default_text="검수 전" %}
+                                            </td>
+                                            <td>
+                                                {% advanced_default_if_none value=item.category default_text="검수 전" %}
+                                            </td>
+                                            <td align="left">
+{#                                                {{ item.de_identificated_talk|default_if_none:item.talk | linebreaksbr | truncatechars:70 }}#}
+                                                {{ item.de_identificated_talk|default_if_none:item.talk | wordwrap:70 | linebreaksbr }}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% advanced_default_if_none value=item.reject_msg default_text="없음" %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% for i in "x"|rjust:blank_count %}
+                                        {% if blank_count != 0 %}
+                                            <tr class="bgcolor_white {% if forloop.first %}thick_top_border{% endif %}">
+                                                <td colspan="20" {% if not forloop.first %} class="none_top_border" {% endif %}></td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 856px !important;">
+                                        {% td_search_fail_message searched_word=None text_limit=70 isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                <tr class="table_end">
+                                    <td colspan="20" class="blr6px brr6px"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=jobtalksource_list paginator_range=paginator_range total_count=total_count %}
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        set_daterangepicker('#dateRangePicker_reg_date', {title: '제공일자 필터', maxDate: new Date()});
+
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        };
+
+        $('#select_inspectionStatus').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_reg_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_image_filming_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#search_provider_info").keypress((e) => {
+            if (e.which === 13) {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            }
+        });
+
+        $("#search_domain").keypress((e) => {
+            if (e.which === 13) {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            }
+        });
+
+        $("#search_category").keypress((e) => {
+            if (e.which === 13) {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            }
+        });
+
+        $("#search_talk").keypress((e) => {
+            if (e.which === 13) {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            }
+        });
+
+        jQuery(document).ready(function () {
+            {% for item in jobtalksource_list %}
+                $('.talk_tr_{{ forloop.counter0|calc_divide:1|page_seq_print:jobtalksource_list }}').hover(() => {
+                    $('.talk_tr_{{ forloop.counter0|calc_divide:1|page_seq_print:jobtalksource_list }}').css('background', '#F3F6F9');
+                }, () => {
+                    $('.talk_tr_{{ forloop.counter0|calc_divide:1|page_seq_print:jobtalksource_list }}').css('background', 'white');
+                })
+            {% endfor %}
+        });
+
+    </script>
+{% endblock %}

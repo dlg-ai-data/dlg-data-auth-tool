@@ -1,0 +1,26 @@
+{% load html_extras %}
+<td colspan="100">
+    {% if isSearched %}
+        <div style="font-size: 20px; color: #ff7675;">검색 실패</div>
+        <div style="font-size: 15px;">
+            {% if searched_word is not None %}
+                '<span style="color: #3699FF;">{{ searched_word | cut_text:text_limit }}</span>{% if searched_word|length > text_limit %}<span style="color: #b2bec3">...생략...</span>{% endif %}'
+            {% else %}
+
+            {% endif %}
+            </br>해당 문자열을 갖는 레코드를 발견하지 못했습니다.
+        </div>
+        <div style="color: silver">
+            </br>
+            {% if search_fail_message is not None %}
+                {{ search_fail_message }}
+            {% endif %}
+        </div>
+    {% elif isSelected %}
+        <div class="text-center">
+            <b>{{ select_fail_message|default_if_none:"설정한 옵션을 데이터로 갖는 레코드가 테이블에 존재하지 않습니다." }}</b>
+        </div>
+    {% else %}
+        <div class="text-center"><b>{{ no_data_message|default_if_none:"아직 테이블에 데이터가 없습니다." }}</b></div>
+    {% endif %}
+</td>

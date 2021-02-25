@@ -1,0 +1,35 @@
+{% load html_extras %}
+{% load humanize %}
+{% if dataset_is_selected %}
+    {% for key in selected_projectType %}
+        <tr>
+            <td class="{% if forloop.last %} blr1-5rem {% endif %}">
+                <span class="label label-inline projectType-span"
+                      style="color:{{ key|get_projectType_color:"color" }};
+                              background-color: {{ key|get_projectType_color:"background_color" }}">
+                    {{ ProjectTypes|take_value_in_dict:key }}
+                </span>
+            </td>
+            <td class="thin_left_border">{{ result|take_value_in_dict:key|take_value_in_dict:'count'|take_value_in_dict:'Initial'|intcomma }}</td>
+            <td class="thin_left_border">{{ result|take_value_in_dict:key|take_value_in_dict:'count'|take_value_in_dict:'Complete'|intcomma }}</td>
+            <td class="thin_left_border">{{ result|take_value_in_dict:key|take_value_in_dict:'count'|take_value_in_dict:'Reject'|intcomma }}</td>
+            {% if key != 'AH04' %}
+                <td class="thin_left_border">
+                    {{ result|take_value_in_dict:key|take_value_in_dict:'count'|take_value_in_dict:'Impossible'|intcomma }}
+                </td>
+            {% else %}
+                <td class="blank_td"></td>
+            {% endif %}
+            <td class="thin_left_border {% if forloop.last %} brr1-5rem {% endif %}">{{ result|take_value_in_dict:key|take_value_in_dict:'count'|take_value_in_dict:'Total'|intcomma }}</td>
+        </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="6" class="blr1-5rem brr1-5rem">
+            <span class="btn btn-icon pulse pulse-danger">
+                <i class="flaticon2-information" style="color: red; font-size: 20px;"></i>
+                <span class="pulse-ring"></span>
+            </span> <span style="color: red;">데이터세트 선택은 필수입니다.</span>
+        </td>
+    </tr>
+{% endif %}

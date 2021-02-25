@@ -1,0 +1,128 @@
+{% load html_extras %}
+{% load humanize %}
+{% if total_count != 0 %}
+    {% for item in items %}
+        <tr class="talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:item.source_count|plus:1 }}">
+            {% if forloop.counter0|divisibleby:item.source_count %}
+{#                <td rowspan="{{ item.source_count }}" class="row_num ick_bottom_border">{{ forloop.counter0|page_seq_print:items|group_count:item.source_count|plus:1 }}</td>#}
+                <input type="hidden" name="reviewer_id" value="{{ item.reviewer_id }}">
+                <td rowspan="{{ item.source_count }}" class="row_num">{{ forloop.counter0|page_seq_print:items }}</td>
+                <td rowspan="{{ item.source_count }}" class=" thick_bottom_border">{{ item.dataset_name }}</td>
+            {% endif %}
+                <td class="{% if forloop.counter|calc_remainder:item.source_count == 2 %} thick_bottom_border{% endif %}">{{ item.job_source_type }}</td>
+            {% if forloop.counter0|divisibleby:item.source_count %}
+                <td rowspan="{{ item.source_count }}" class="thick_left_border thick_bottom_border">{% advanced_default_if_none value=item.email default_text="미등록" %}</td>
+                <td rowspan="{{ item.source_count }}" class="thick_bottom_border">{{ item.user_name }}</td>
+                <td rowspan="{{ item.source_count }}" class="thick_bottom_border">
+                    {% advanced_default_if_none value=item.tel_no default_text="미등록" %}
+                </td>
+                <td rowspan="{{ item.source_count }}" class="thick_left_border thick_bottom_border">
+                    {% if item.grade_code == "AA01" %}
+                        <span class="label label-inline label-success w-63-5px">초급자</span>
+                    {% elif item.grade_code == "AA02" %}
+                        <span class="label label-inline label-warning w-63-5px">중급자</span>
+                    {% elif item.grade_code == "AA03" %}
+                        <span class="label label-inline label-success w-63-5px">고급자</span>
+                    {% elif item.grade_code == "AA04" %}
+                        <span class="label label-inline label-danger w-63-5px">대화제공자</span>
+                    {% endif %}
+                </td>
+                <td rowspan="{{ item.source_count }}" class="thick_bottom_border">{% advanced_default_if_none value=item.member_join_source default_text="미등록" %}</td>
+            {% endif %}
+                <td class="thick_left_border {% if forloop.counter|calc_remainder:item.source_count == 2 %} thick_bottom_border{% endif %}">
+                    {{ item.total_count|default_if_none:0|intcomma }}개
+                    /
+                    {{ item.total_count|get_rate:item.total_count }}%
+                </td>
+                <td class="thick_left_border {% if forloop.counter|calc_remainder:item.source_count == 2 %} thick_bottom_border{% endif %}">
+                    {{ item.inspection_status_complete_count|default_if_none:0|intcomma }}개
+                    /
+                    {{ item.inspection_status_complete_count|get_rate:item.total_count }}%
+                </td>
+                <td class="{% if forloop.counter|calc_remainder:item.source_count == 2 %} thick_bottom_border{% endif %}">
+                    {{ item.accumulated_reject_count|default_if_none:0|intcomma }}개
+                    /
+                    {{ item.accumulated_reject_count|get_rate:item.total_count }}%
+                </td>
+            {% if forloop.counter0|divisibleby:item.source_count %}
+                <td rowspan="{{ item.source_count }}" class="thick_left_border thick_bottom_border">
+                    <input class="job_limit_count"
+                       style="width: 64px !important; text-align: right"
+                       type="text"
+                       pattern="[0-9]+"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                       name="job_limit_count"
+                       data-limit-count="{{ item.limit_count|default_if_none:0 }}"
+                       value="{{ item.limit_count|default_if_none:0 }}">
+                </td>
+                <td rowspan="{{ item.source_count }}" class="thick_bottom_border">
+                    <select class="form-control w-80px {# selectpicker #} job_limit_yn"
+                            name="job_limit_yn"
+                            data-limit-yn="{{ item.limit_yn }}">
+                        {% tag_options_text_choices class_name='UseType' value=item.limit_yn blank_option=False %}
+                    </select>
+                </td>
+                <td rowspan="{{ item.source_count }}" class="thick_left_border thick_bottom_border">
+                    <button id="save_button" type="button" title="저장"
+                            data-toggle="tooltip" data-trigger="hover"
+                            class="btn actions-btn btn-secondary save-btn" disabled>
+                        <i class="fas fa-save"></i>
+                    </button>
+                </td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    {% for i in "x"|rjust:blank_count %}
+        {% if blank_count != 0 %}
+            <tr class="bgcolor_fff9f1 {% if forloop.first %}thick_top_border{% endif %}">
+                <td colspan="13" {% if not forloop.first %} class="none_top_border" {% endif %}></td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+{% else %}
+    <tr style="height: 856px !important;">
+        {% td_search_fail_message searched_word=None text_limit=70 isSearched=isSearched isSelected=isSelected %}
+    </tr>
+{% endif %}
+<tr class="table_end">
+    <td colspan="10" class="blr6px"></td>
+    <td>
+        <input class="all_job_limit_count"
+               style="width: 64px !important; text-align: right"
+               type="text"
+               pattern="[0-9]+"
+               name="all_job_limit_count"
+               value="0"
+               oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+        >
+    </td>
+    <td>
+        <select class="form-control w-80px all_job_limit_yn"
+                name="all_job_limit_yn">
+            {% tag_options_text_choices class_name='UseType' blank_option=True %}
+        </select>
+    </td>
+    <td class="brr6px">
+        <button type="button" title="전체 저장"
+                data-toggle="tooltip" data-trigger="hover"
+                class="btn actions-btn btn-secondary all_save-btn">
+            <i class="fas fa-save"></i>
+        </button>
+    </td>
+</tr>
+<script>
+    jQuery(document).ready(function () {
+        {% for item in items %}
+            $('.talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:2|plus:1 }}').hover(() => {
+                $('.talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:2|plus:1 }}').css('background', '#F3F6F9');
+            }, () => {
+                $('.talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:2|plus:1 }}').css('background', 'white');
+            })
+        {% endfor %}
+    });
+
+    // Y-m-d + ' ' + (H:i)으로 나타나는 데이터를 ' '대신 <br> 넣기
+    $.each($('.two_line_date'), function (index, item) {
+        $(item).html($(item).text().trim().replace(' ', '<br>'))
+    });
+</script>

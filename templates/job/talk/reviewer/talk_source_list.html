@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% load humanize %}
+{% block content %}
+    <script type="text/javascript">
+    </script>
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'job:talk_reviewer_source_list' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <div class="mr-3 row justify-content-end ml-auto">
+                             <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">검수상태: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="inspection_status" id="inspection_status"  data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='InspectionStatus' value=inspection_status blank_option=True blank_text="전체" blank_value="all"%}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">데이터세트: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="dataset_ids" id="select_dataset_name" multiple data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="전체" blank_value="all"%}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">검수일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_search_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="search_date" id="search_date"
+                                           value="{{ search_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="데이터세트명 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if isSearched and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 900px">
+                            <table class="mb-0 table;" style="min-width: 1200px">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>데이터세트명</th>
+                                    <th>검수상태</th>
+                                    <th>대화원문</th>
+                                    <th>비식별화 처리상태</th>
+                                    <th>등록일자</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if total_count != 0 %}
+                                    {% for talksource in jobTalksource_list %}
+                                        <tr {% if forloop.last and blank_count > 0 %}
+                                            class="thick_bottom_border"  {% endif %} onclick="location.href='{{ talksource.id }}/review'">
+                                            <td>{{ forloop.counter0|page_seq_print:jobTalksource_list }}</td>
+                                            <td>
+                                                {{ talksource.dataset.dataset_name }}
+                                            </td>
+                                              <td>
+                                                {% if talksource.inspection_status == "AL01" %}
+                                                    <span class="label label-inline label-secondary w-63-5px">초기</span>
+                                                {% elif talksource.inspection_status == "AL02" %}
+                                                    <span class="label label-inline label-light-warning w-63-5px">반려</span>
+                                                {% elif talksource.inspection_status == "AL03" %}
+                                                    <span class="label label-inline label-light-success w-63-5px">승인</span>
+                                                {% elif talksource.inspection_status == "AL04" %}
+                                                    <span class="label label-inline label-light-danger w-63-5px">불가</span>
+                                                {% elif talksource.inspection_status == "AL05" %}
+                                                    <span class="label label-inline label-light-info w-63-5px">검수 중</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="w-600px long_text_p pt-5 pb-5" align="left">{{ talksource.de_identificated_talk | default_if_none:talksource.talk | linebreaksbr | truncatechars:100 }}</td>
+{#                                            <td> {{ talksource.get_de_identificated_status_display }}</td>#}
+                                          <td>
+                                                {% if talksource.de_identificated_status == "AY01" %}
+                                                    <span class="label label-inline label-secondary w-63-5px">불필요</span>
+                                                {% elif talksource.de_identificated_status == "AY02" %}
+                                                    <span class="label label-inline label-light-warning w-63-5px">작업전</span>
+                                                {% elif talksource.de_identificated_status == "AY03" %}
+                                                    <span class="label label-inline label-light-success w-63-5px">작업완료</span>
+                                                 {% endif %}
+                                            </td>
+                                            <td> {{ talksource.reg_date }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 855px !important;">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=70 no_data_message="검색된 데이터가 존재하지 않습니다." search_fail_message="검색은 데이터세트명, 요청기관, 단가에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=jobTalksource_list paginator_range=paginator_range total_count=total_count %}
+        </div>
+    </div>
+    <script type="text/javascript">
+        set_daterangepicker('#dateRangePicker_search_date', {title: '검수 일자 필터', maxDate: new Date()});
+
+        $(".thick_bottom_border").on('click', function() {
+            onclick="location.href='{{ talksource.id }}/review'"
+        })
+
+          $("#inspection_status").on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+        {#$("#select_dataset_name").on('change', function () {#}
+        {#    $("#page").val(1);#}
+        {#    $('#searchForm').submit();#}
+        {#});#}
+           $("#search_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+    </script>
+{% endblock %}

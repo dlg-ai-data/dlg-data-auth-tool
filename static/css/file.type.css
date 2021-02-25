@@ -1,0 +1,57 @@
+.search-file::after{
+    content: "검색";
+}
+
+.download-attach-file::after{
+    content: "받기";
+    cursor: pointer !important;
+}
+
+.modal-body .download-attach-file::after{
+    padding-top: 5px !important;
+}
+
+.AF01::after{
+    content: "게시판";
+}
+
+.AF02::after{
+    content: "계약서";
+}
+
+.AF03::after{
+    content: "통장사본";
+}
+
+.AF04::after{
+    content: "신분서류";
+}
+
+.AF05::after{
+    content: "장애증빙";
+}
+
+.custom-file-label {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.custom-file-minus {
+    width: 30px;
+    float: right;
+    margin-top: 5px;
+    padding-left: 3px;
+}
+
+.custom-file {
+    width: 100%;
+}
+
+.input-file {
+    width: 100%;
+    border-radius: 0.5rem !important;
+}
+
+.input-file:focus {
+    outline-width: 0;
+}

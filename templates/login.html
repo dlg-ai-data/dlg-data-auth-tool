@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        {% include '_meta.html' %}
+    </head>
+    <body id="kt_body" class="quick-panel-right demo-panel-right offcanvas-right header-fixed header-mobile-fixed subheader-enabled aside-enabled aside-fixed aside-minimize-hoverable page-loading">
+        <link href="{% static 'css/pages/login/login-1.css' %}" rel="stylesheet" type="text/css" />
+        <script src="{% static 'js/pages/custom/login/login.js' %}"></script>
+
+		<div class="d-flex flex-column flex-root">
+			<div class="d-flex flex-column flex-root">
+			<div class="login login-2 login-signin-on d-flex flex-column flex-column-fluid bg-white position-relative overflow-hidden" id="kt_login">
+				<div class="login-header py-10 flex-column-auto">
+					<div class="container d-flex flex-column flex-md-row align-items-center justify-content-center justify-content-md-between">
+						<a href="#" class="text-center mb-15">
+							<img src="{% static 'favicon-96x96.png' %}" alt="logo" class="h-70px" />
+						</a>
+						<h3 class="font-weight-bolder text-center font-size-h4 font-size-h1-lg text-white"><br /></h3>
+					</div>
+				</div>
+				<div class="login-body d-flex flex-column-fluid align-items-stretch justify-content-center">
+					<div class="container row">
+						<div class="col-lg-6 d-flex align-items-center">
+							<!--begin::Signin-->
+							<div class="login-form login-signin">
+								<!--begin::Form-->
+								<form class="form w-xxl-550px rounded-lg p-20" action="{% url 'member:login' %}" method="post" novalidate="novalidate" id="kt_login_signin_form">{% csrf_token %}
+									<!--begin::Title-->
+									<div class="pb-13 pt-lg-0 pt-5">
+										<h3 class="font-weight-bolder text-dark font-size-h4 font-size-h1-lg">Authoring Tools </br>& Work Management.</h3>
+									</div>
+									<!--begin::Title-->
+									<!--begin::Form group-->
+									<div class="form-group">
+										<label class="font-size-h6 font-weight-bolder text-dark">이메일</label>
+										<input class="form-control form-control-solid h-auto p-6 rounded-lg" type="email" name="email" autocomplete="off" />
+									</div>
+									<!--end::Form group-->
+									<!--begin::Form group-->
+									<div class="form-group">
+										<div class="d-flex justify-content-between mt-n5">
+											<label class="font-size-h6 font-weight-bolder text-dark pt-5">비밀번호</label>
+										</div>
+										<input class="form-control form-control-solid h-auto p-6 rounded-lg" type="password" name="password" autocomplete="off" />
+									</div>
+                                    <div class="pb-lg-0 pb-5">
+									    <button type="button" id="kt_login_signin_submit" class="btn btn-primary font-weight-bolder font-size-h6 px-8 py-4 my-3 mr-3">로그인</button>
+									</div>
+								</form>
+							</div>
+						</div>
+                        <div class="col-lg-6 bgi-size-contain bgi-no-repeat bgi-position-y-left bgi-position-x-left min-h-150px mt-1 m-md-0" style="background-image: url({% static "media/svg/illustrations/process-setup.svg" %})" ></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+        <script type="text/javascript">
+            function ajax_join() {
+                $.ajax({
+                    url: '{% url 'member:join' %}',
+                    type: 'POST',
+                    data: $("#kt_login_signup_form").serialize(),
+                    success: function (data) {
+                        if (data.result == true) {
+                            swal.fire({
+                                text: "회원가입이 완료되었습니다.",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "확인",
+                                customClass: {
+                                    confirmButton: "btn font-weight-bold btn-light-primary"
+                                }
+                            }).then(function () {
+                                KTUtil.scrollTop();
+                                location.reload();
+                            });
+                        } else {
+                            swal.fire({
+                                text: data.error,
+                                icon: "error",
+                                buttonsStyling: false,
+                                confirmButtonText: "확인",
+                                customClass: {
+                                    confirmButton: "btn font-weight-bold btn-light-primary"
+                                }
+                            }).then(function () {
+                                KTUtil.scrollTop();
+                            });
+                        }
+                    }
+                });
+            }
+
+            $(function() {
+                const msg = '{{ msg }}';
+                if (msg != '') {
+                    swal.fire({
+                        text: msg,
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "확인",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    })
+                }
+            });
+        </script>
+    </body>
+</html>

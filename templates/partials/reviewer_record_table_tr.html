@@ -1,0 +1,94 @@
+{% load html_extras %}
+{% if total_count != 0 %}
+    {% for item in items %}
+        <tr class="talk_tr_{{ forloop.counter0 }}">
+            {% if forloop.first or item.seq|plus:-1|divisibleby:item.talk_count %}
+{#                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border">{{ forloop.counter0|page_seq_print:items|group_count:item.talk_count|plus:1 }}</td>#}
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_left_border thick_bottom_border">{{ item.job_talk.dataset.dataset_name }}</td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_left_border thick_bottom_border">
+                    {% if item.job_talk.job_status == "AK01" %}
+                        <span class="label label-inline label-secondary w-63-5px">초기</span>
+                    {% elif item.job_talk.job_status == "AK02" %}
+                        <span class="label label-inline label-light-primary w-63-5px">작업완료</span>
+                    {% elif item.job_talk.job_status == "AK03" %}
+                        <span class="label label-inline label-light-success w-63-5px">작업중</span>
+                    {% elif item.job_talk.job_status == "AK04" %}
+                        <span class="label label-inline label-light-danger w-63-5px">작업제외</span>
+                    {% elif item.job_talk.job_status == "AK05" %}
+                        <span class="label label-inline label-light-warning w-63-5px">회수</span>
+                    {% endif %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border {% if item.job_talk.job_date is not None %}two_line_date{% endif %}">
+                    {% advanced_default_if_none value=item.job_talk.job_date default_text="-" filter='Y-m-d (H:i)' %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border">{{ item.job_talk.annotator.member.name }}</td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_left_border thick_bottom_border">
+                    {% if item.job_talk.inspection_status == "AL01" %}
+                        <span class="label label-inline label-secondary w-63-5px">초기</span>
+                    {% elif item.job_talk.inspection_status == "AL02" %}
+                        <span class="label label-inline label-light-warning w-63-5px">반려</span>
+                    {% elif item.job_talk.inspection_status == "AL03" %}
+                        <span class="label label-inline label-light-success w-63-5px">승인</span>
+                    {% elif item.job_talk.inspection_status == "AL04" %}
+                        <span class="label label-inline label-light-danger w-63-5px">불가</span>
+                    {% endif %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border {% if item.job_talk.inspection_date is not None %}two_line_date{% endif %}">
+                    {% advanced_default_if_none value=item.job_talk.inspection_date default_text="검수 전" filter='Y-m-d (H:i)' %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border">{{ item.job_talk.reviewer.member.name }}</td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border">
+                    {% advanced_default_if_none value=item.job_talk.reviewer.member.tel_no default_text="미등록" %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border">
+                    {% advanced_default_if_none value=item.job_talk.reject_msg default_text="없음" %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_left_border thick_bottom_border">
+                    {% advanced_default_if_none value=item.job_talk.job_talk_source.domain default_text="없음" %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border">
+                    {% advanced_default_if_none value=item.job_talk.job_talk_source.category default_text="없음" %}
+                </td>
+                <td rowspan="{{ item.talk_count|get_groupcount:item.seq|get_rowspan:forloop.revcounter }}" class="thick_bottom_border w-700px" style="text-align: left">
+                    {{ item.job_talk.job_talk_source.de_identificated_talk | wordwrap:50 | linebreaksbr }}
+                </td>
+            {% endif %}
+            <td class="{% if forloop.counter|calc_remainder:item.talk_count == item.talk_count %}thick_bottom_border{% endif %}">
+                {% advanced_default_if_none value=item.talker default_text="없음" %}
+            </td>
+            <td class="{% if forloop.counter|calc_remainder:item.talk_count == item.talk_count %}thick_bottom_border{% endif %}" style="text-align: left">
+                {% advanced_default_if_none value=item.talk_summary default_text="없음" %}
+            </td>
+            <td class="{% if forloop.counter|calc_remainder:item.talk_count == item.talk_count %}thick_bottom_border{% endif %}" style="text-align: left">
+                {% advanced_default_if_none value=item.intent default_text="없음" %}
+            </td>
+        </tr>
+    {% endfor %}
+    {% for i in "x"|rjust:blank_count %}
+        {% if blank_count != 0 %}
+            <tr class="bgcolor_fff9f1 {% if forloop.first %}thick_top_border{% endif %}">
+                <td colspan="20" {% if not forloop.first %} class="none_top_border" {% endif %}></td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+{% else %}
+    <tr style="height: 856px !important;">
+        {% td_search_fail_message searched_word=None text_limit=70 isSearched=isSearched isSelected=isSelected %}
+    </tr>
+{% endif %}
+<script>
+    jQuery(document).ready(function () {
+        {% for item in items %}
+            $('.talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:4|plus:1 }}').hover(() => {
+                $('.talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:4|plus:1 }}').css('background', '#F3F6F9');
+            }, () => {
+                $('.talk_tr_{{ forloop.counter0|page_seq_print:items|group_count:4|plus:1 }}').css('background', 'white');
+            })
+        {% endfor %}
+    });
+
+    // Y-m-d + ' ' + (H:i)으로 나타나는 데이터를 ' '대신 <br> 넣기
+    $.each($('.two_line_date'), function (index, item) {
+        $(item).html($(item).text().trim().replace(' ', '<br>'))
+    });
+</script>

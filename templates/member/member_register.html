@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 max-w-850px page-content">
+        <div class="card card-custom gutter-b example example-compact">
+            <form id="form" class="bg_fcfcfa" method="post" enctype="multipart/form-data" novalidate>
+                <div class="card-body">
+                    <div class="form-group justify-content-between row">
+                        <div class="col-lg-6 col-md-6 col-sm-7 col-7 pr-0 row">
+                            <label class="col-lg-4 col-md-4 col-sm-4 col-form-label text-left max-w-123px-sm">이메일:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8 pr-0 pl-0">
+                                <div class="input-group mr-0 ml-0">
+                                    <div class="input-group-prepend ml-md-12-5">
+                                            <span class="input-group-text">
+                                                <i class="la la-at"></i>
+                                            </span>
+                                    </div>
+                                    <input type="email" class="form-control" name="email" id="email" required/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-5 col-5 pl-0 row">
+                            <label class="col-lg-4 col-md-4 col-sm-4 pl-0 col-form-label  text-left">이름:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8 pr-0 pl-0">
+                                <div class="input-group mr-0 ml-0">
+                                    <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="la la-font"></i>
+                                            </span>
+                                    </div>
+                                    <input type="text" class="form-control" name="name" id="user-name"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row ">
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-6 pr-0 justify-content-between row">
+                            <label class="col-lg-4 col-md-4 col-sm-4 col-form-label  text-left">비밀번호:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8 pr-0 pl-0">
+                                <div class="input-group mr-0 ml-0">
+                                    <div class="input-group-prepend ml-12-5">
+                                            <span class="input-group-text">
+                                                <i class="flaticon-lock"></i>
+                                            </span>
+                                    </div>
+                                    <input type="password" class="form-control" name="password1" id="pw1"
+                                           autocomplete="new-password" required/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-6 pl-0 row">
+                            <label class="col-lg-4 col-md-4 col-sm-4 pl-0 col-form-label text-left">비밀번호
+                                확인:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8 pr-0 pl-0">
+                                <div class="input-group mr-0 ml-0">
+                                    <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="la la-check"></i>
+                                            </span>
+                                    </div>
+                                    <input type="password" class="form-control" name="password2" id="pw2"
+                                           required/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row">
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-6 pr-0 row">
+                            <label class="col-lg-4 col-md-4 col-sm-4 col-form-label  text-left">주민번호:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8 pr-0 pl-0" id="resident-registration-number">
+                                <div class="input-group row mr-0 ml-0">
+                                    <div class="input-group-prepend ml-12-5">
+                                            <span class="input-group-text">
+                                                <i class="la la-expeditedssl"></i>
+                                            </span>
+                                    </div>
+                                    <input type="text" class="form-control"
+                                           name="resident-registration-number1"
+                                           pattern="[0-9]+" id="rrn1"
+                                           maxlength="6"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                                    <input type="text" class="form-control"
+                                           name="resident-registration-number2"
+                                           pattern="[0-9]+" id="rrn2"
+                                           maxlength="7"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 col-6 pl-0 row">
+                            <label class="col-lg-4 col-md-4 col-sm-4 pl-0 col-form-label  text-left">연락처:</label>
+                            <div class="col-lg-8 col-md-8 col-sm-8 pr-0 pl-0">
+                                <div class="input-group mr-0 ml-0">
+                                    <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="la la-phone"></i>
+                                            </span>
+                                    </div>
+                                    <input type="text" class="form-control phone-num" id="tel1" name="tel_no1"
+                                           maxlength="3"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                                    <input type="text" class="form-control phone-num" id="tel2" name="tel_no2"
+                                           maxlength="4"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                                    <input type="text" class="form-control phone-num" id="tel3" name="tel_no3"
+                                           maxlength="4"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                                </div>
+                                <div class="form-group position-absolute zindex-1 w-100">
+                                    <div class="checkbox-inline mr-auto ml-auto d-flex flex-row-reverse row adm_yn_check">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row">
+                        <div class="col-lg-6 col-md-6 col-sm-6 pr-0 row">
+                            <label class="col-lg-4 col-md-4 col-form-label  text-left">주소:</label>
+                            <div class="col-lg-8 col-md-8 pr-0 pl-0">
+                                <div class="input-group row mr-0 ml-0">
+                                    <div class="input-group-prepend ml-12-5">
+                                        <a href='javascript:void(0);' onclick="execDaumPostcode()"
+                                           class="btn btn-light-success font-weight-bold addr-search-btn">
+                                            <i class="la la-search"></i>
+                                        </a>
+                                    </div>
+                                    <input type="text" class="form-control" id="postcode" name="zipcode"/>
+                                    <input type="text" class="form-control" id="address" name="addr"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6 pl-detail-address row">
+                            <label class="col-lg-4 col-md-4 pl-0-sm col-form-label text-left">상세주소:</label>
+                            <div class="col-lg-8 col-md-8 pr-0 pl-0">
+                                <div class="input-group mr-0 ml-detail-adress">
+                                    <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="la la-home"></i>
+                                            </span>
+                                    </div>
+                                    <input type="text" class="form-control" id="detailAddress"
+                                           name="addr_detail"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row">
+                        <div class="col-lg-8 col-md-8 col-sm-9 col-9 pr-0 row">
+                            <label class="col-lg-4 col-md-4 col-form-label text-left bank_no_label-max-width pr-10px">계좌번호:</label>
+                            <div class="col-lg-8 col-md-8 pr-0 pl-0">
+                                <div class="input-group bank-input-group row mr-0 ml-0">
+                                    <div class="input-group-prepend ml-12-5 ml-custom-auto">
+                                            <span class="input-group-text">
+                                                <i class="la la-bank"></i>
+                                            </span>
+                                    </div>
+                                    <div class="bank-dropdown">
+                                        <select id="bank-select" class="form-control selectpicker"
+                                                name="bank_code">
+                                            {% tag_options_text_choices class_name='bank_code' value='' blank_option=True blank_text="은행 선택" %}
+                                        </select>
+                                    </div>
+                                    <input type="text" class="form-control max-w-233 input-bank_no"
+                                           name="bank_no"
+                                           maxlength="17"
+                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-4 col-sm-3 col-3 pl-0 row input-disabled">
+                            <label class="col-lg-4 col-md-4 pl-0 col-form-label">장애유무:</label>
+                            <div class="col-lg-8 col-md-8 pl-0">
+                                    <span class="switch switch-outline switch-icon switch-warning">
+                                        <label>
+                                            <input type="checkbox" name="disabled_person_yn"/>
+                                            <span></span>
+                                        </label>
+                                    </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row">
+                        <div class="col-6 col-md-4">
+                            <label class="col-form-label text-left">참여 사유:</label>
+                            <select class="form-control selectpicker" name="job_join_type">
+                                {% tag_options_text_choices class_name='job_join_type' value='' blank_option=True blank_text="사유 선택" %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="col-form-label text-left">직업:</label>
+                            <select class="form-control selectpicker" name="member_job_type">
+                                {% tag_options_text_choices class_name='member_job_type' value='' blank_option=True blank_text="직업 선택" %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="col-form-label text-left">가입 경로:</label>
+                            <select class="form-control selectpicker" name="member_join_source">
+                                {% tag_options_text_choices class_name='member_join_source' value='' blank_option=True blank_text="경로 선택" %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row">
+                        <div class="col-md-12">
+                            <label class="col-form-label text-left">작업 가능 시간:</label>
+                            {% tag_checkbox_text_choices class_name='work_time_type' value='' name='work_time_type' %}
+                        </div>
+                    </div>
+                    <div class="form-group justify-content-between row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 row">
+                            <label class="col-lg-2 col-md-2 col-sm-2 col-form-label text-left">메모:</label>
+                            <div class="col-lg-10 col-md-10 pr-0 pl-0">
+                                <input type="text" maxlength="200" class="form-control" name="memo"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">계약서</label>
+                                <div class="contract_file-minus pt-2 mt-0 mb-2" style="visibility: hidden;">
+                                    <a href="javascript:file_reset('contract_file');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                 height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                    <rect x="0" y="0" width="24" height="24"/>
+                                                    <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                    <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                </g>
+                                            </svg>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="attach-file">
+                                <input class="input-file custom-file-input" type="file" name="file1"
+                                       id="contract_file">
+                                <label class="custom-file-label contract_file-label search-file"
+                                       for="contract_file"><span
+                                        style="color: #a9a9a9 ">비어있음.</span></label>
+                                <input type="hidden" name="file_type" value="AF02">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">통장사본</label>
+                                <div class="bankbook_file-minus pt-2 mt-0 mb-2" style="visibility: hidden;">
+                                    <a href="javascript:file_reset('bankbook_file');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                 height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                    <rect x="0" y="0" width="24" height="24"/>
+                                                    <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                    <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                </g>
+                                            </svg>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="attach-file">
+                                <input class="input-file custom-file-input" type="file" name="file2"
+                                       id="bankbook_file">
+                                <label class="custom-file-label bankbook_file-label search-file"
+                                       for="bankbook_file"><span
+                                        style="color: #a9a9a9 ">비어있음.</span></label>
+                                <input type="hidden" name="file_type" value="AF03">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">신분서류</label>
+                                <div class="identification_file-minus pt-2 mt-0 mb-2"
+                                     style="visibility: hidden;">
+                                    <a href="javascript:file_reset('identification_file');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                 height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                    <rect x="0" y="0" width="24" height="24"/>
+                                                    <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                    <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                </g>
+                                            </svg>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="attach-file">
+                                <input class="input-file custom-file-input" type="file" name="file3"
+                                       id="identification_file">
+                                <label class="custom-file-label identification_file-label search-file"
+                                       for="identification_file"><span
+                                        style="color: #a9a9a9 ">비어있음.</span></label>
+                                <input type="hidden" name="file_type" value="AF04">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">장애증빙</label>
+                                <div class="disabled_person_file-minus pt-2 mt-0 mb-2"
+                                     style="visibility: hidden;">
+                                    <a href="javascript:file_reset('disabled_person_file');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                 height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                    <rect x="0" y="0" width="24" height="24"/>
+                                                    <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                    <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                </g>
+                                            </svg>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="attach-file">
+                                <input class="input-file custom-file-input" type="file" name="file4"
+                                       id="disabled_person_file">
+                                <label class="custom-file-label disabled_person_file-label search-file"
+                                       for="disabled_person_file"><span
+                                        style="color: #a9a9a9 ">비어있음.</span></label>
+                                <input type="hidden" name="file_type" value="AF05">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">이력서</label>
+                                <div class="resume_file-minus pt-2 mt-0 mb-2" style="visibility: hidden;">
+                                    <a href="javascript:file_reset('resume_file');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                 height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                    <rect x="0" y="0" width="24" height="24"/>
+                                                    <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                    <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                </g>
+                                            </svg>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="attach-file">
+                                <input class="input-file custom-file-input" type="file" name="file5"
+                                       id="resume_file">
+                                <label class="custom-file-label resume_file-label search-file"
+                                       for="resume_file"><span
+                                        style="color: #a9a9a9 ">비어있음.</span></label>
+                                <input type="hidden" name="file_type" value="AF06">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">개인정보 및 작업 동의서</label>
+                                <div class="agree_file-minus pt-2 mt-0 mb-2" style="visibility: hidden;">
+                                    <a href="javascript:file_reset('agree_file');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                 height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                    <rect x="0" y="0" width="24" height="24"/>
+                                                    <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                    <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                </g>
+                                            </svg>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="attach-file">
+                                <input class="input-file custom-file-input" type="file" name="file6"
+                                       id="agree_file">
+                                <label class="custom-file-label agree_file-label search-file"
+                                       for="agree_file"><span
+                                        style="color: #a9a9a9 ">비어있음.</span></label>
+                                <input type="hidden" name="file_type" value="AF07">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">역할</label>
+                            </div>
+                            <div class="attach-file">
+                                <select id="role-select" class="form-control selectpicker"
+                                        name="role_code">
+                                    {% tag_options_text_choices class_name='MemberRole' value='' blank_option=False %}</select>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="row ml-0 mr-0 justify-content-between">
+                                <label class="col-form-label text-left">데이터세트</label>
+                            </div>
+                            <div class="attach-file">
+                                <select id="dataset-select" class="form-control selectpicker"
+                                        name="dataset_ids" id="select_dataset_name" multiple data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="선택하세요." blank_value="" all_select=False blank_disabled=True %}</select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center bg_none">
+                        <button type="submit" class="btn btn-primary mr-2">등 록</button>
+                    </div>
+                </div>
+                {% csrf_token %}
+            </form>
+        </div>
+    </div>
+    <script>
+        const url_registerMember = '{% url 'member:member_register' %}';
+        $('#dataset-select').on('show.bs.select', function () {
+            previous_selected_list = $(this).val();
+            temp_list = [...previous_selected_list];
+        });
+        $('#dataset-select').on('change', function () {
+                // 선택한 value 들이 모여있는 list
+                const items = $(this).val();
+                if (!temp_list.length) {
+                    $('#dataset-select option:eq(0)').prop('selected', false);
+                    $('#dataset-select option:eq(0)').removeAttr('selected')
+                    $('#dataset-select').parent().find('.dropdown-menu.inner').children().first().removeClass('selected')
+                    $('#dataset-select').parent().find('.dropdown-menu.inner').children().first().children().removeClass('selected')
+                    temp_list = $(this).val();
+                } else {
+                    // case 1: 'all' 선택시 나머지 선택 모두 취소
+                    if (!temp_list.includes('all') && items.includes('all')) {
+                        // 먼저 모든 option 의 selected 를 false 로 만들고 'all' 을 선택.
+                        $('#dataset-select option').prop('selected', false);
+                        $('#dataset-select option:eq(1)').prop('selected', true);
+                        $('#dataset-select').parent().find('.dropdown-menu.inner').children().next().removeClass('selected');
+                        $('#dataset-select').parent().find('.dropdown-menu.inner').children().next().children().removeClass('selected');
+                        $('#dataset-select').parent().find('.dropdown-menu.inner').children().next().first().addClass('selected');
+                        temp_list = ['all']
+                    }
+
+                    // case 2: 'all' 이 선택되어 있을 때 다른 데이터세트 선택시 'all' 선택 취소
+                    else if (temp_list.includes('all') && items.length >= 2) {
+                        $('#dataset-select option:eq(1)').prop('selected', false);
+                        $('#dataset-select option:eq(1)').removeAttr('selected')
+                        $('#dataset-select').parent().find('.dropdown-menu.inner').children().next().first().removeClass('selected')
+                        $('#dataset-select').parent().find('.dropdown-menu.inner').children().next().first().children('a').removeClass('selected')
+                        temp_list = $(this).val();
+                    }
+
+                    // case 3: 'all' 이 선택되어있지 않았고 새로운 데이터세트 항목 선택 시
+                    else if (!temp_list.includes('all') && items.length >= 1) {
+                        temp_list = [...items];
+                    }
+
+                    // case 4: 'all' 을 선택하지 않고 선택되어있던 데이터세트 항목을 취소
+                    else {
+                        temp_list = $(this).val();
+                    }
+
+                    if ($(this).val().length === 0) {
+                        temp_list = ['all']
+                        $('#dataset-select option:eq(1)').prop('selected', true);
+                        $('#dataset-select').parent().find('.dropdown-menu.inner').children().eq(1).addClass('selected');
+                    }
+                    dataset_list = temp_list;
+                }
+            }
+        );
+    </script>
+    <script src="{% static 'js/pages/member/member_register.js' %}"></script>
+{% endblock %}

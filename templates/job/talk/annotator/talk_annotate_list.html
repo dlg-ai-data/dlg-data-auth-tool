@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% load humanize %}
+{% block content %}
+    <script type="text/javascript">
+    </script>
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'job:talk_annotator_list' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-skype pl-15px ml-7px"
+                                title="대화조각 요약 배정받기"
+                                data-trigger="hover"
+                                data-toggle="tooltip"
+                                data-modal-toggle="modal"
+                                data-target="#datasetRegisterModal"
+                                onclick="dataAssignment()"
+                        ><i class="fas fa-folder-plus pr-0"></i>
+                        </button>
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">작업상태: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="job_status" id="job_status"  data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='JobStatus' value=job_status blank_option=True blank_text="전체" blank_value="all"%}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">검수상태: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="inspection_status" id="inspection_status"  data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='InspectionStatus' value=inspection_status blank_option=True blank_text="전체" blank_value="all"%}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">데이터세트: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="dataset_ids" id="select_dataset_name" multiple data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">작업일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_search_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="search_date" id="search_date"
+                                           value="{{ search_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="데이터세트명 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if isSearched and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 900px">
+                            <table class="mb-0 table;" style="min-width: 1200px">
+                                <thead class="thead-dark">
+                                <tr >
+                                    <th style="width: auto">#</th>
+                                    <th style="width: auto">데이터세트명
+                                    <th style="width: auto">작업상태</th>
+                                    <th style="width: auto">검수상태</th>
+                                    <th style="width: 50%">대화조각</th>
+                                    <th style="width: auto">등록일자</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if total_count != 0 %}
+                                    {% for jobtalk in jobtalk_list %}
+                                        <tr {% if forloop.last and blank_count > 0 %}
+                                            class="thick_bottom_border"  {% endif %} onclick="location.href='{{ jobtalk.id }}/annotate'">
+                                            <td>{{ forloop.counter0|page_seq_print:jobtalk_list }}</td>
+                                            <td>
+                                                {{ jobtalk.dataset_name }}
+                                            </td>
+                                            <td>
+                                                {% if jobtalk.job_status == "AK01" %}
+                                                    <span class="label label-inline label-secondary w-63-5px">초기</span>
+                                                {% elif jobtalk.job_status == "AK02" %}
+                                                    <span class="label label-inline label-light-primary w-63-5px">작업완료</span>
+                                                {% elif jobtalk.job_status == "AK03" %}
+                                                    <span class="label label-inline label-light-success w-63-5px">작업중</span>
+                                                {% elif jobtalk.job_status == "AK04" %}
+                                                    <span class="label label-inline label-light-danger w-63-5px">작업제외</span>
+                                                {% elif jobtalk.job_status == "AK05" %}
+                                                    <span class="label label-inline label-light-warning w-63-5px">회수</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if jobtalk.inspection_status == "AL01" %}
+                                                    <span class="label label-inline label-secondary w-63-5px">초기</span>
+                                                {% elif jobtalk.inspection_status == "AL02" %}
+                                                    <span class="label label-inline label-light-warning w-63-5px">반려</span>
+                                                {% elif jobtalk.inspection_status == "AL03" %}
+                                                    <span class="label label-inline label-light-success w-63-5px">승인</span>
+                                                {% elif jobtalk.inspection_status == "AL04" %}
+                                                    <span class="label label-inline label-light-danger w-63-5px">불가</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="w-400px long_text_p pt-5 pb-5" align="left">
+                                                {{ jobtalk.job_talk_source.de_identificated_talk | linebreaksbr | truncatechars:150 }}
+                                            </td>
+                                            <td> {{ jobtalk.reg_date }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                      {% for i in "x"|rjust:blank_count %}
+                                    {% if blank_count != 0 %}
+                                        <tr>  </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                {% else %}
+                                    <tr style="height: 855px !important; width: 100%">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=70 search_fail_message="검색은 데이터세트명, 요청기관, 단가에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=jobtalk_list paginator_range=paginator_range total_count=total_count %}
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        function dataAssignment() {
+            $.ajax({
+                url: "{% url 'job:JobAssignment' %}",
+                type: "get",
+                dataType : "json",
+                success: function (data) {
+                    if(data.result){
+                        alert(data.msg)
+                        if(data.index !==-1){
+                            let url = '{% url 'job:talk_annotator' id=0 %}'
+                            location.href= url.replace("0",data.index);
+                        }
+                    }
+                },
+                error: function (request, status, error) {
+                    console.log(request, status, error)
+                    alert(data.msg)
+                }
+
+            });
+
+
+        }
+
+        set_daterangepicker('#dateRangePicker_search_date', {title: '작업일자', maxDate: new Date()});
+
+           $("#job_status").on('change', function () {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            });
+            $("#inspection_status").on('change', function () {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            });
+          {% comment %}  $("#select_dataset_name").on('change', function () {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            }); {% endcomment %}
+
+            $("#search_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+         function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+    </script>
+{% endblock %}

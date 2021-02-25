@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="card card-custom gutter-b w-1000px position-absolute" style="left: 300px; top: 30px;">
+        <div class="card-header h-auto">
+            <div class="card-title py-5">
+                <span class="svg-icon svg-icon-primary svg-icon-2x"><!--begin::Svg Icon | path:C:\wamp64\www\keenthemes\themes\keen\theme\demo1\dist/../src/media/svg/icons\Communication\Clipboard-list.svg--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                        <rect x="0" y="0" width="24" height="24"/>
+                        <path d="M8,3 L8,3.5 C8,4.32842712 8.67157288,5 9.5,5 L14.5,5 C15.3284271,5 16,4.32842712 16,3.5 L16,3 L18,3 C19.1045695,3 20,3.8954305 20,5 L20,21 C20,22.1045695 19.1045695,23 18,23 L6,23 C4.8954305,23 4,22.1045695 4,21 L4,5 C4,3.8954305 4.8954305,3 6,3 L8,3 Z" fill="#000000" opacity="0.3"/>
+                        <path d="M11,2 C11,1.44771525 11.4477153,1 12,1 C12.5522847,1 13,1.44771525 13,2 L14.5,2 C14.7761424,2 15,2.22385763 15,2.5 L15,3.5 C15,3.77614237 14.7761424,4 14.5,4 L9.5,4 C9.22385763,4 9,3.77614237 9,3.5 L9,2.5 C9,2.22385763 9.22385763,2 9.5,2 L11,2 Z" fill="#000000"/>
+                        <rect fill="#000000" opacity="0.3" x="10" y="9" width="7" height="2" rx="1"/>
+                        <rect fill="#000000" opacity="0.3" x="7" y="9" width="2" height="2" rx="1"/>
+                        <rect fill="#000000" opacity="0.3" x="7" y="13" width="2" height="2" rx="1"/>
+                        <rect fill="#000000" opacity="0.3" x="10" y="13" width="7" height="2" rx="1"/>
+                        <rect fill="#000000" opacity="0.3" x="7" y="17" width="2" height="2" rx="1"/>
+                        <rect fill="#000000" opacity="0.3" x="10" y="17" width="7" height="2" rx="1"/>
+                    </g>
+                </svg></span>
+                <span><h3 class="card-label textColor_white">공지사항</h3></span>
+            </div>
+        </div>
+        <div class="card-body">
+        {% if notice_count != 0 %}
+            {% for notice in all_notices %}
+            <div class="accordion accordion-toggle-arrow" id="accordion{{ notice.id }}">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title textColor_white {% if forloop.counter0 > 0 %} collapsed {% endif %}" data-toggle="collapse" data-target="#collapse{{ notice.id }}">
+                            {{ notice.title}}
+                        </div>
+                    </div>
+                    <div id="collapse{{ notice.id }}" class="{% if forloop.counter0 > 0 %}collapse{% else %} show {% endif %}" data-parent="#accordion{{ notice.id }}">
+                        <div class="card-body">
+                            {{notice.contents|linebreaksbr}}
+                        </div>
+                        <div class="card-footer" style="text-align: right">{{ notice.reg_date }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+        </div>
+        <div class="card-header h-auto">
+            <div class="card-title py-5">
+                <span class="svg-icon svg-icon-primary svg-icon-2x"><!--begin::Svg Icon | path:C:\wamp64\www\keenthemes\themes\keen\theme\demo1\dist/../src/media/svg/icons\Shopping\Chart-bar1.svg--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                        <rect x="0" y="0" width="24" height="24"/>
+                        <rect fill="#000000" opacity="0.3" x="12" y="4" width="3" height="13" rx="1.5"/>
+                        <rect fill="#000000" opacity="0.3" x="7" y="9" width="3" height="8" rx="1.5"/>
+                        <path d="M5,19 L20,19 C20.5522847,19 21,19.4477153 21,20 C21,20.5522847 20.5522847,21 20,21 L4,21 C3.44771525,21 3,20.5522847 3,20 L3,4 C3,3.44771525 3.44771525,3 4,3 C4.55228475,3 5,3.44771525 5,4 L5,19 Z" fill="#000000" fill-rule="nonzero"/>
+                        <rect fill="#000000" opacity="0.3" x="17" y="11" width="3" height="6" rx="1.5"/>
+                    </g>
+                </svg></span>
+                <span><h3 class="card-label textColor_white">작업현황(전체 5일)</h3></span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="job_annotator_count_chart"></div>
+        </div>
+
+    </div>
+    <script type="text/javascript">
+        const primary = '#6993FF';
+        const success = '#1BC5BD';
+        const info = '#8950FC';
+        const warning = '#FFA800';
+        const danger = '#F64E60';
+
+        $(document).ready(function () {
+            job_annotator_count_chart();
+        });
+        function job_annotator_count_chart() {
+            const apexChart = "#job_annotator_count_chart";
+            const parent_series=[{
+                    name: '대화조각 제출건수',
+                    data: [{% for item in provider %}'{{ item }}',{% endfor %}]
+                }, {
+                    name: '대화제출 승인건수',
+                    data: [{% for item in source_reviewer %}'{{ item }}',{% endfor %}]
+                }, {
+                    name: '대화제출  반려건수',
+                    data: [{% for item in source_reject %}'{{ item }}',{% endfor %}]
+                }, {
+                    name: '대화조각 작업건수',
+                    data: [{% for item in annotator %}'{{ item }}',{% endfor %}]
+                }, {
+                    name: '대화조각 승인건수',
+                    data: [{% for item in reviewer %}'{{ item }}',{% endfor %}]
+                }, {
+                    name: '대화조각 반려건수',
+                    data: [{% for item in annotator_reject %}'{{ item }}',{% endfor %}]
+                }]
+            {% if user.is_admin %}
+                var series = parent_series;
+            {% else %}
+                {% if user.role_code == 'MR01' %}
+                    var series = parent_series.slice(3, 6);
+                {% elif user.role_code == 'MR02' %}
+                    var series = parent_series.slice(1, 2);
+                {% elif user.role_code == 'MR03' %}
+                    var series = parent_series.slice(3, 4);
+                {% else %}
+                    var series = parent_series.slice(0, 3);
+                {% endif %}
+            {% endif %}
+
+            var options = {
+                series: series,
+                chart: {
+                    type: 'bar',
+                    height: 350
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        endingShape: 'rounded'
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                xaxis: {
+                    categories: [{% for item in days %}'{{ item }}',{% endfor %}],
+                },
+                yaxis: {
+                    title: {
+                        text: '개'
+                    }
+                },
+                fill: {
+                    opacity: 1
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (val) {
+                            return numberWithCommas(val) + " 개"
+                        }
+                    }
+                },
+                colors: [primary, success, warning, danger, info]
+            };
+
+            var chart = new ApexCharts(document.querySelector(apexChart), options);
+            chart.render();
+        }
+
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
+{% endblock %}

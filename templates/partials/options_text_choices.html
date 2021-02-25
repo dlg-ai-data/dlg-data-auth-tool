@@ -1,0 +1,75 @@
+{% load html_extras %}
+{% if blank_option %}
+    <option value{% if blank_value %}={{ blank_value }} {% endif %} {% if not values or 'all' in values %} selected {% endif %} {% if blank_disabled %} data-content="<span style='color: #a4b0be;'>선택하세요.</span>" disabled {% endif %}>{{ blank_text | default:"선택" }}</option>
+{% endif %}
+{% if unregistered_option %}
+    {% if value == 'no-data' %}
+        <option class="no-data" value="no-data" selected>미등록</option>
+    {% else %}
+        <option class="no-data" value="no-data">미등록</option>
+    {% endif %}
+{% endif %}
+{% if class_name == 'DatasetSelectList'  %}
+    {% if all_select %}
+        <option value="all">전체</option>
+    {% endif %}
+
+    {% for  dataset_id, dataset_name in choices %}
+
+        {% if dataset_id in values %}
+            <option title="{{ dataset_name }}" value="{{ dataset_id }}" selected>{{ dataset_name }}</option>
+        {% else %}
+            <option title="{{ dataset_name }}" value="{{ dataset_id }}">{{ dataset_name }}</option>
+        {% endif %}
+
+    {% endfor %}
+{% else %}
+    {% if colored and not styled %}
+        {% for key, val, style in choices %}
+            {% if key == value %}
+                <option data-content="<span class='label label-inline {{ style }}'>{{ val }}</span>" value="{{ key }}"
+                        selected>{{ val }}</option>
+            {% else %}
+                <option data-content="<span class='label label-inline {{ style }}'>{{ val }}</span>"
+                        value="{{ key }}">{{ val }}</option>
+            {% endif %}
+        {% endfor %}
+    {% elif colored and styled %}
+        {% for key, val, color, style in choices %}
+            {% if key == value %}
+                <option data-content="<span class='label label-inline {{ color }}' style='{{ style }}'>{{ val }}</span>"
+                        value="{{ key }}"
+                        selected>{{ val }}</option>
+            {% else %}
+                <option data-content="<span class='label label-inline {{ color }}' style='{{ style }}'>{{ val }}</span>"
+                        value="{{ key }}">{{ val }}</option>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {% if is_multi_select and is_label_setting %}
+            {% for key, val in choices %}
+                {% if key in values %}
+                    <option value="{{ key }}" selected disabled>{{ val }}</option>
+                {% else %}
+                    <option class="new_label_type" value="{{ key }}">{{ val }}</option>
+                {% endif %}
+            {% endfor %}
+            {#        {% elif is_multi_select and not is_label_setting %}#}
+            {#            {% for type, key, val in choices %}#}
+            {#                {% if key in values %}#}
+            {#                    <option value="{{ key }}" selected>{{ val }}</option>#}
+            {#                {% else %}#}
+            {#                    <option value="{{ key }}">{{ val }}</option>#}
+            {#                {% endif %}#}
+            {#            {% endfor %}#}
+        {% else %}
+            {% for key, val in choices %}
+                {% if key == value|toInt %}
+                    <option value="{{ key }}" selected>{{ val }}</option>
+                {% else %}
+                    <option value="{{ key }}">{{ val }}</option>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+{% endif %}

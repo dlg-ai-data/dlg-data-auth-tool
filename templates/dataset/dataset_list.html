@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% load humanize %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'dataset:datasets' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-skype pl-15px ml-7px"
+                                title="데이터세트 생성"
+                                data-trigger="hover"
+                                data-toggle="tooltip"
+                                data-modal-toggle="modal"
+                                data-target="#datasetRegisterModal"
+                        ><i class="fas fa-folder-plus pr-0"></i>
+                        </button>
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">대화제공자 지급방식: </label>
+                                <select class="form-control w-150px pr-0 pl-0 selectpicker"
+                                        name="provider_pay_type"
+                                        id="select_annotator_pay_type">
+                                    {% tag_options_text_choices class_name='PayType' value=selected_provider_pay_type blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">어노테이터 지급방식: </label>
+                                <select class="form-control w-150px pr-0 pl-0 selectpicker"
+                                        name="annotator_pay_type"
+                                        id="select_annotator_pay_type">
+                                    {% tag_options_text_choices class_name='PayType' value=selected_annotator_pay_type blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">리뷰어 지급방식: </label>
+                                <select class="form-control w-150px pr-0 pl-0 selectpicker" name="reviewer_pay_type"
+                                        id="select_reviewer_pay_type">
+                                    {% tag_options_text_choices class_name='PayType' value=selected_reviewer_pay_type blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="데이터세트명, 기관, 단가 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if isSearched and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 900px">
+                            <table class="mb-0 table">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>데이터세트명</th>
+                                    <th>요청기관</th>
+                                    <th class="pt-0 pb-0 w-100px">작업</br>시작일자</th>
+                                    <th class="pt-0 pb-0 w-100px">작업</br>종료일자</th>
+                                    <th class="pt-0 pb-0">대화제공자</br>지급방식</th>
+                                    <th class="pt-0 pb-0">어노테이터</br>지급방식</th>
+                                    <th class="pt-0 pb-0">리뷰어</br>지급방식</th>
+                                    <th>단가(원)</th>
+                                    <th>진행률</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if dataset_count != 0 %}
+                                    {% for dataset in all_datasets %}
+                                        <tr {% if forloop.last and blank_count > 0 %}
+                                            class="thick_bottom_border" {% endif %}>
+                                            <td>{{ forloop.counter0|page_seq_print:all_datasets }}</td>
+                                            <td>
+                                                {{ dataset.dataset_name }}
+                                            </td>
+                                            <td>
+                                                {% advanced_default_if_none value=dataset.request_orga default_text="미기입" %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% advanced_default_if_none value=dataset.job_start_date default_text="미설정" filter="date_Y-m-d" %}
+                                            </td>
+                                            <td>
+                                                {% advanced_default_if_none value=dataset.job_end_date default_text="미설정" filter="date_Y-m-d" %}
+                                            </td>
+                                            <td>
+                                                {% if dataset.annotator_pay_type == "AJ01" %}
+                                                    <span class="label label-inline label-outline-info"
+                                                          style="height: 36px !important;">포인트<br/>지급신청</span>
+                                                {% else %}
+                                                    <span class="label label-inline label-outline-dark">월마감</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if dataset.annotator_pay_type == "AJ01" %}
+                                                    <span class="label label-inline label-outline-info"
+                                                          style="height: 36px !important;">포인트<br/>지급신청</span>
+                                                {% else %}
+                                                    <span class="label label-inline label-outline-dark">월마감</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if dataset.reviewer_pay_type == "AJ01" %}
+                                                    <span class="label label-inline label-outline-info"
+                                                          style="height: 36px !important;">포인트<br/>지급신청</span>
+                                                {% else %}
+                                                    <span class="label label-inline label-outline-dark">월마감</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% advanced_default_if_none value=dataset.price default_text="0" filter="price" %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                <input type="hidden" value="{{ dataset.progress_value }}">
+                                                <div class="circle">
+
+                                                </div>
+                                            </td>
+                                            <td class="thick_left_border">
+                                                <button data-id="{{ dataset.id }}"
+                                                        class="btn actions-btn btn-light-google dataset-label-make-btn"
+                                                        onclick="location.href='/dataset/datasets/{{ dataset.id }}/overall/setting'"
+                                                        title="데이터세트 설정 및 라벨링" data-trigger="hover" data-toggle="tooltip">
+                                                    <i class="fas fa-tags"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% for i in "x"|rjust:blank_count %}
+                                        {% if blank_count != 0 %}
+                                            <tr></tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 855px !important;">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=70 search_fail_message="검색은 데이터세트명, 요청기관, 단가에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                <tr class="table_end">
+                                    <td colspan="20" class="blr6px brr6px"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=all_datasets paginator_range=paginator_range total_count=dataset_count %}
+        </div>
+    </div>
+    <!-- Modal-->
+    <div class="modal fade" id="datasetRegisterModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header h-55px">
+                    <h5 class="modal-title" id="dataset_register_modal_h5"><b>데이터세트 등록</b></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <i aria-hidden="true" class="ki ki-close"></i>
+                    </button>
+                </div>
+                <form id="dataset_register_modal_form" class="bg_fcfcfa">
+                    <div class="modal-body pb-0">
+                        <div class="form-group col-lg-12 col-md-12 col-sm-12">
+                            <label><b class="required_sign">데이터세트 이름</b></label>
+                            <input type="text" class="form-control" placeholder="데이터세트 이름을 입력하세요." id="dataset_name"
+                                   name="dataset_name" required/>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">닫기
+                        </button>
+                        <button type="submit" class="btn btn-success font-weight-bold">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $('.circle').each((index, item) => {
+                const el = $(item);
+                const progress_value = $(item).parent().children().val()
+                let color;
+                if (progress_value && progress_value === 0) {
+                    color = ['#dff9fb', '#dff9fb']
+                } else if (0 < progress_value && progress_value < 25) {
+                    color = ['#dff9fb', '#f6e58d']
+                } else if (25 <= progress_value && progress_value < 50) {
+                    color = ['#dff9fb', '#f9ca24']
+                } else if (50 <= progress_value && progress_value < 75) {
+                    color = ['#dff9fb', '#f0932b']
+                } else if (75 <= progress_value && progress_value < 100) {
+                    color = ['#dff9fb', '#eb4d4b']
+                } else if (progress_value === 100) {
+                    color = ['#dff9fb', '#6ab04c']
+                }
+                create_circle_progress_bar(el, progress_value, 3, color)
+            });
+        });
+
+        const create_circle_progress_bar = (el, value, width, color) => {
+            Circles.create({
+                el: el,
+                radius: 20,
+                value: value,
+                maxValue: 100,
+                width: width,
+                text: function (value) {
+                    return value + '%';
+                },
+                colors: color,
+                duration: 100,
+                wrpClass: 'circles-wrp',
+                textClass: 'circles-text',
+                valueStrokeClass: 'circles-valueStroke',
+                maxValueStrokeClass: 'circles-maxValueStroke',
+                styleWrapper: true,
+                styleText: true
+            });
+        }
+
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+        $('#select_reviewer_pay_type').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_annotator_pay_type').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_calc_type').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_projectType').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#dataset_register_modal_form").submit(function (event) {
+            event.preventDefault();
+            const project_id = $("#project_id option:selected").val();
+            const dataset_name = $("#dataset_name").val();
+            swalWithBootstrapButtons.fire({
+                title: '데이터세트 등록',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'dataset:ajax_register_dataset' %}",
+                        method: "POST",
+                        data: {project_id, dataset_name},
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "데이터세트가 등록되었습니다.", "success", "확인").then(() => {
+                                    location.reload()
+                                });
+                            } else {
+                                swalFire("데이터세트 등록 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'board:notice' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        {% if user.is_admin == True %}
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-bright-ube mr-auto pl-17px ml-7px"
+                                title="공지 등록"
+                                data-trigger="hover"
+                                data-toggle="tooltip"
+                                id=notice-register-btn
+                                data-modal-toggle="modal"
+                                data-target="#noticeRegisterModal">
+                            <i class="far fa-edit pr-0"></i>
+                        </button>
+                        {% endif %}
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            {% if user.is_admin == True %}
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">상태: </label>
+                                <select class="form-control w-100px pr-0 pl-0 selectpicker" name="status"
+                                        id="select_status">
+                                    <option value="all"
+                                            {% if selected_status == "all" %}selected{% endif %}>전체
+                                    </option>
+                                    <option data-content="<span class='label label-inline label-dashed-secondary'>작성중</span>"
+                                            value="AE01"
+                                            {% if selected_status == "AE01" %}selected{% endif %}>작성중
+                                    </option>
+                                    <option data-content="<span class='label label-inline label-dashed-warning'>공지중</span>"
+                                            value="AE02"
+                                            {% if selected_status == "AE02" %}selected{% endif %}>공지중
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 display_block">메인화면 노출: </label>
+                                <select class="form-control w-70px pr-0 pl-0 selectpicker" name="notice_yn"
+                                        id="select_notice_yn">
+                                    {% tag_options_text_choices class_name='UseType' value=selected_notice_yn blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            {% endif %}
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="공지 제목, 작성자 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if isSearched and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=50 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 900px">
+                            <table class="mb-0 table">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>상태</th>
+                                    <th class="w-400px">공지 제목</th>
+                                    <th>작성자</th>
+                                    <th>파일</th>
+                                    <th class="pt-0 pb-0">작성일자</th>
+                                    {% if user.is_admin == True %}
+                                    <th>메인 노출 여부</th>
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if notice_count != 0 %}
+                                    {% for notice in all_notices %}
+                                        {% if notice.upper_id == None %}
+                                            <tr {% if forloop.last and blank_count > 0 %}
+                                                class="thick_bottom_border" {% endif %}>
+                                                <td>{{ forloop.counter0|page_seq_print:all_notices }}</td>
+                                                <td class="thick_left_border">
+                                                    {% if notice.get_bbs_status_display == '작성완료' %}
+                                                        <span class="bbs_status_span label label-inline label-dashed-warning">공지중</span>
+                                                    {% else %}
+                                                        <span class="bbs_status_span label label-inline label-dashed-secondary">작성중</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-left thick_left_border">
+                                                    <p style="overflow: hidden; text-overflow: ellipsis; width: 400px; margin-bottom: 0px !important;">
+                                                        <a class="notice_detail_check"
+                                                           data-modal-toggle="modal"
+                                                           data-target="#noticeConfirmModal"
+                                                           data-id="{{ notice.id }}"
+                                                           data-bbs-status="{{ notice.bbs_status }}"
+                                                           data-notice-yn="{{ notice.notice_yn }}"
+                                                           data-title="{{ notice.title }}"
+                                                           data-membername="{{ notice.member.name }}"
+                                                           data-reg-date="{{ notice.reg_date | date:'Y-m-d (H:i)' }}"
+                                                           data-modf-date="{{ notice.modf_date | date:'Y-m-d (H:i)' }}"
+                                                           data-file="{{ notice.file }}"
+                                                           data-file-id="{{ notice.file_id }}"
+                                                           data-org-file-name="{{ notice.file.org_file_name }}"
+                                                           data-contents="{{ notice.contents }}"
+                                                        >{{ notice.title }}</a>
+                                                    </p>
+                                                </td>
+                                                <td class="thick_left_border">{{ notice.member.name }}</td>
+                                                <td>
+                                                    {% if notice.file_id %}
+                                                        <i class="la la-file-download"
+                                                           title="첨부됨"
+                                                           data-trigger="hover"
+                                                           data-toggle="tooltip"></i>
+                                                    {% else %}
+                                                        <span style="color: #a9a9a9;">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="two_line_date">{{ notice.modf_date | date:'Y-m-d (H:i)' }}</td>
+                                                {% if user.is_admin == True %}
+                                                <td class="thick_left_border">
+                                                    <select data-noticeyn="{{ notice.notice_yn }}"
+                                                            class="form-control selectpicker notice-yn-selector w-70px m-auto pr-0"
+                                                            {% if notice.get_bbs_status_display == '작성중' %}
+                                                            disabled {% endif %}>
+                                                        <option value="Y"
+                                                                {% if notice.notice_yn == "Y" %}selected{% endif %}
+                                                                data-content='<span class="label label-inline label-light-primary">Y</span>'>
+                                                            Y
+                                                        </option>
+                                                        <option value="N"
+                                                                {% if notice.notice_yn == "N" %}selected{% endif %}
+                                                                data-content='<span class="label label-inline label-light-danger">N</span>'>
+                                                            N
+                                                        </option>
+                                                    </select>
+                                                </td>
+                                                <td class="thick_left_border">
+                                                    <button data-id="{{ notice.id }}"
+                                                            class="btn actions-btn notice-or-cancel-btn w-50px"
+                                                            title="메인화면 노출여부 변경" data-trigger="hover" data-toggle="tooltip" disabled>
+                                                        <i class="far fa-lightbulb"></i>
+                                                    </button>
+                                                    <button data-id="{{ notice.id }}"
+                                                            class="btn actions-btn btn-light-instagram notice-delete-btn w-50px"
+                                                            title="공지사항 삭제" data-trigger="hover" data-toggle="tooltip">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for i in "x"|rjust:blank_count %}
+                                        {% if blank_count != 0 %}
+                                            <tr></tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 855px !important;">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=50 search_fail_message="검색은 공지 제목과 작성자에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                <tr class="table_end">
+                                    <td colspan="20" class="blr6px brr6px"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=all_notices paginator_range=paginator_range total_count=notice_count %}
+        </div>
+    </div>
+    <!-- 공지 작성 모달-->
+    <div class="modal fade" id="noticeRegisterModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header h-55px" style="padding-left: 37px;">
+                    <h5 class="modal-title" id="notice_register_modal_h5"><b>공지사항 등록</b></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <i aria-hidden="true" class="ki ki-close"></i>
+                    </button>
+                </div>
+                <form id="notice-register-modal-form" class="bg_fcfcfa" method="POST" enctype="multipart/form-data"
+                      novalidate>
+                    <div class="modal-body pt-0 pb-0">
+                        <div class="card-body pb-0 pt-22-75px"
+                             style="padding-left: 15px !important; padding-right: 15px !important;">
+                            <div class="form-group">
+                                <label><b class="required_sign">제목</b></label>
+                                <input type="text" class="form-control" id="notice_title_1" name="title"
+                                       placeholder="공지 제목을 작성해주세요."
+                                       style="font-size: 15px"
+                                       autofocus/>
+                            </div>
+                            <div class="m-0">
+                                <div class="form-group w-100">
+                                    <div class="row ml-0 mr-0">
+                                        <label class="mt-1"><b>파일 첨부하기</b></label>
+                                        <div class="custom-file-minus mt-0 mb-2" style="visibility: hidden;">
+                                            <a href="javascript:file_reset('customFile');">
+                                        <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
+                                                 viewBox="0 0 24 24" version="1.1">
+                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                <rect x="0" y="0" width="24" height="24"/>
+                                                <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                            </g>
+                                        </svg><!--end::Svg Icon--></span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="custom-file w-100">
+                                        <input type="file" class="custom-file-input" id="customFile" name="attachment"/>
+                                        <label class="custom-file-label search-file" for="customFile"><span
+                                                style="color: #a9a9a9 ">첨부할 파일을 선택하세요.</span></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label><b>내용 작성</b></label>
+                                <textarea id="notice_textarea_1" class="form-control h-300px" name="contents"
+                                          placeholder="공지 내용을 입력해주세요."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-center">
+                        <button type="button"
+                                onclick="temp_save('#notice_title_1', '#bbs_status_1', '#notice-register-modal-form', 'register')"
+                                class="btn btn-warning mr-2">임시저장
+                        </button>
+                        <button type="button"
+                                onclick="complete_save('#notice_title_1', '#bbs_status_1', '#notice-register-modal-form', '#notice_textarea_1', 'register')"
+                                class="btn btn-success mr-2">공지하기
+                        </button>
+                    </div>
+                    <input type="hidden" name="bbs_status" id="bbs_status_1">
+                    {% csrf_token %}
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- 공지 확인 모달-->
+    <div class="modal fade" id="noticeConfirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content" style="min-width: 488px !important;">
+                <form id="notice-confirm-modal-form" class="bg_fcfcfa" method="POST" enctype="multipart/form-data"
+                      novalidate>
+                    <div class="modal-header" style="padding-left: 37px;">
+                        <h5 class="modal-title" id="reference_register_modal_h5"><b>공지사항 확인</b></h5>
+                        <div class="row position-absolute notice-header-info">
+                            <div class="ml-0 mr-10 justify-content-between row w-150px">
+                                <div class="text-center">
+                                    <label><b>상태</b></label>
+                                    <div class="bbs_status_div"
+                                         style='padding: 1px; border: 1px solid white; border-radius: 0.42rem; background-color: white;'></div>
+                                </div>
+                                <div class="text-center">
+                                    <label><b>공지 여부</b></label>
+                                    <div class="notice_yn_div"></div>
+                                </div>
+                            </div>
+                            <button type="button" class="close mr-15px" data-dismiss="modal" aria-label="Close">
+                                <i aria-hidden="true" class="ki ki-close"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-body pt-0 pb-0">
+                        <div class="card-header pt-0 pb-0 row pl-15px pr-15px h-80px mt-0">
+                            <div class="justify-content-between row ml-0 mr-0 w-100" style=" color: black !important;">
+                                <div class="ml-0 mr-0 mt-13px row w-90px">
+                                    <div>
+                                        <label><b>작성자 이름</b></label>
+                                        <input type="text" id="notice_writer"
+                                               class="form-control w-100 h-30px m-auto text-center" disabled/>
+                                    </div>
+                                </div>
+                                <div class="ml-0 mr-0 mt-13px row w-310px">
+                                    <div class="mr-10px">
+                                        <label><b>최초 작성 일자</b></label>
+                                        <input type="text" id="notice_reg_date"
+                                               class="form-control w-150px h-30px m-auto text-center" disabled/>
+                                    </div>
+                                    <div>
+                                        <label><b>최종 작성 일자</b></label>
+                                        <input type="text" id="notice_modf_date"
+                                               class="form-control w-150px h-30px m-auto text-center" disabled/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body pt-13px pb-0 pl-15px pr-15px">
+                            <input type="hidden" class="form-control" id="notice_id" name="notice_id"/>
+                            <div>
+                                <div class="form-group notice_modal-title w-100">
+                                    <label><b class="required_sign">제목</b></label>
+                                    <input type="text" class="form-control" id="notice_title_2" name="title"
+                                           placeholder="공지 제목을 작성해주세요." style="font-size: 15px" autofocus/>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-row m-0">
+                                <div class="form-group w-100">
+                                    <div class="row ml-0 mr-0">
+                                        <label class="mt-1"><b>파일 첨부하기</b></label>
+                                        <div class="custom-file-minus mt-0 mb-2">
+                                            <a href="javascript:file_reset('customFile_2');">
+                                            <span class="svg-icon svg-icon-primary svg-icon-2x">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                     xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                     height="24px"
+                                                     viewBox="0 0 24 24" version="1.1">
+                                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                        <rect x="0" y="0" width="24" height="24"/>
+                                                        <circle fill="#000000" opacity="0.3" cx="12" cy="12" r="10"/>
+                                                        <rect fill="#000000" x="6" y="11" width="12" height="2" rx="1"/>
+                                                    </g>
+                                                </svg>
+                                            </span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="custom-file w-100">
+                                        <input type="hidden" id="already_saved_file_id" name="already_saved_file_id">
+                                        <input type="file" class="custom-file-input" id="customFile_2"
+                                               name="attachment"/>
+                                        <label class="custom-file-label search-file filename"
+                                               for="customFile_2"></label>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label><b>내용 작성</b></label>
+                                <textarea id="notice_textarea_2" class="form-control h-300px" name="contents"
+                                          placeholder="공지 내용을 입력해주세요."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    {% if user.is_admin == True %}
+                    <div class="modal-footer d-flex justify-content-center">
+                        <button type="button"
+                                onclick="temp_save('#notice_title_2', '#bbs_status_2', '#notice-confirm-modal-form', 'modify')"
+                                class="btn btn-warning mr-2">임시저장
+                        </button>
+                        <button type="button"
+                                onclick="complete_save('#notice_title_2', '#bbs_status_2', '#notice-confirm-modal-form', '#notice_textarea_2', 'modify')"
+                                class="btn btn-success mr-2">공지하기
+                        </button>
+                    </div>
+                    {% endif %}
+                    <input type="hidden" name="bbs_status" id="bbs_status_2">
+                    {% csrf_token %}
+
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        // 하이라이트 selectpicker 의 변경을 감지 후 원래 상태와 비교하여 action 버튼 활성/비활성 선택
+        $(document).on("change", ".notice-yn-selector", (e) => {
+            const originStatus = $(e.currentTarget).parents('tr').find('select').data('noticeyn');
+            const selectedStatus = $(e.currentTarget).find(":selected").val();
+            // 원래 등급과 selectBox 에서 선택된 등급의 value 를 비교
+            if (originStatus === selectedStatus) { // 수정 버튼 비활성
+                console.log($(e.currentTarget).parents('tr').find('.actions-btn'))
+                $(e.currentTarget).parents('tr').find('.notice-or-cancel-btn').attr('disabled', true);
+                $(e.currentTarget).parents('tr').find('.notice-or-cancel-btn').removeClass('btn-light-warning');
+            } else {
+                $(e.currentTarget).parents('tr').find('.notice-or-cancel-btn').attr('disabled', false);
+                $(e.currentTarget).parents('tr').find('.notice-or-cancel-btn').addClass('btn-light-warning');
+            }
+
+        })
+
+        // 공지의 강조 여부 변경 -> 화면 새로고침 X, 버튼 비활성 O
+        $(document).on("click", ".notice-or-cancel-btn", (e) => {
+            e.preventDefault();
+            const clicked_target = $(e.currentTarget);
+
+            const id = clicked_target.data('id');
+            const selectedStatus = clicked_target.parents('tr').find('select').find(":selected").val();
+            const select = clicked_target.parents('tr').find('select');
+            const update_btn = clicked_target;
+            swalWithBootstrapButtons.fire({
+                title: '공지 상태 변경',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'board:notice_change_status' %}?id=" + id + "&noticeyn=" + selectedStatus,
+                        method: "GET",
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            if (data.result == true) {
+                                swalFire("공지 상태 변경 성공", "상태가 변경되었습니다.", "success", "확인").then(() => {
+                                    select.data("noticeyn", data.new_status);
+                                    select.attr("data-noticeyn", data.new_status);
+                                    update_btn.removeClass('btn-light-warning');
+                                    update_btn.prop("disabled", true);
+                                });
+                            } else {
+                                swalFire("변경 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        // 게시물 삭제
+        $(document).on("click", ".notice-delete-btn", (e) => {
+            e.preventDefault();
+            const clicked_target = $(e.currentTarget);
+
+            const id = clicked_target.data('id');
+
+            swalWithBootstrapButtons.fire({
+                title: '공지사항 제거',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'board:notice_delete' %}?id=" + id,
+                        method: "GET",
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            if (data.result == true) {
+                                swalFire("", "공지사항이 제거되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("공지사항 제거 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+        $('#select_status').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_notice_yn').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        function temp_save(notice_title, bbs_status, modal_form_id, action) {
+            const title = $(notice_title).val();
+            $(bbs_status).val('AE01');
+
+            if (title.trim() === "") {
+                swalFire("", "공지 제목을 입력하지 않았습니다.", "error", "확인")
+            } else {
+                if (action === "register")
+                    // 공지사항 등록할 때
+                    $.ajax({
+                        url: "{% url 'board:notice_register' %}",
+                        method: "POST",
+                        processData: false,
+                        contentType: false,
+                        data: new FormData($(modal_form_id)[0]),
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "공지를 임시 저장합니다.", "warning", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("임시 저장 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                else
+                    // 이미 등록되어 있던 공지사항의 내용이나 상태를 변경할 때
+                    $.ajax({
+                        url: "{% url 'board:notice_modify' %}",
+                        method: "POST",
+                        processData: false,
+                        contentType: false,
+                        data: new FormData($(modal_form_id)[0]),
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "공지를 임시 저장합니다.", "warning", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("임시 저장 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+            }
+        }
+
+        function complete_save(notice_title, bbs_status, modal_form_id, notice_textarea, action) {
+            const title = $(notice_title).val();
+            const textarea = $(notice_textarea).val();
+            $(bbs_status).val('AE02');
+            if (title.trim() === "") {
+                swalFire("", "공지 제목을 입력하지 않았습니다.", "error", "확인")
+            } else if (textarea.trim() === "") {
+                swalFire("", "공지 내용을 입력하지 않았습니다.", "error", "확인")
+            } else {
+                swalWithBootstrapButtons.fire({
+                    title: 'Vaiv에 공지사항 공개',
+                    text: "계속 진행하시겠습니까?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '확인',
+                    cancelButtonText: '취소',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (action === "register")
+                            // 공지사항 등록할 때
+                            $.ajax({
+                                url: "{% url 'board:notice_register' %}",
+                                method: "POST",
+                                enctype: 'multipart/form-data',
+                                processData: false,
+                                contentType: false,
+                                data: new FormData($(modal_form_id)[0]),
+                                dataType: "json",
+                                success: function (data) {
+                                    if (data.result === true) {
+                                        swalFire("", "Vaiv에 공지사항이 공개됩니다.", "success", "확인").then(() => {
+                                            location.reload();
+                                        });
+                                    } else {
+                                        swalFire("공지 공개 실패", data.error, "error", "확인");
+                                    }
+                                }
+                            });
+                        else
+                            // 이미 등록되어 있던 공지사항의 내용이나 상태를 변경할 때
+                            $.ajax({
+                                url: "{% url 'board:notice_modify' %}",
+                                method: "POST",
+                                enctype: 'multipart/form-data',
+                                processData: false,
+                                contentType: false,
+                                data: new FormData($(modal_form_id)[0]),
+                                dataType: "json",
+                                success: function (data) {
+                                    if (data.result === true) {
+                                        swalFire("", "Vaiv에 공지사항이 공개됩니다.", "success", "확인").then(() => {
+                                            location.reload();
+                                        });
+                                    } else {
+                                        swalFire("공지 공개 실패", data.error, "error", "확인");
+                                    }
+                                }
+                            });
+
+                    }
+                })
+            }
+        }
+
+        $('.custom-file-input').on('change', function () {
+            var fileName = $(this).val();
+            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            $(".custom-file-minus").css("visibility", "visible");
+        });
+
+        function file_reset(file_id) {
+            $("#" + file_id).val("").trigger("change");
+            $('.custom-file-label').removeClass("selected").html("<span style=\"color: #a9a9a9 \">첨부할 파일을 선택하세요.</span>");
+            $(".custom-file-minus").css("visibility", "hidden");
+            $("#already_saved_file_id").val('')
+        }
+
+        // 공지사항 모달에 데이터 전달하여 표시해주기
+        $(".notice_detail_check").on('click', function () {
+            $("#notice_id").val($(this).data('id'));
+            $("#notice_title_2").val($(this).data('title'));
+            if ($(this).data('bbs-status') === "AE01") {
+                $(".bbs_status_div").html("<span class='label label-inline label-dashed-secondary w-100'>작성중</span>")
+            } else if ($(this).data('bbs-status') === "AE02") {
+                $(".bbs_status_div").html("<span class='label label-inline label-dashed-warning w-100'>공지중</span>")
+            }
+            if ($(this).data('notice-yn') === "N") {
+                $(".notice_yn_div").html("<span class='label label-inline label-light-danger'>N</span>")
+            } else if ($(this).data('notice-yn') === "Y") {
+                $(".notice_yn_div").html("<span class='label label-inline label-light-primary'>Y</span>")
+            }
+            $("#notice_writer").val($(this).data('membername'));
+            $("#notice_reg_date").val($(this).data('reg-date'));
+            $("#notice_modf_date").val($(this).data('modf-date'));
+            if ($(this).data('file') === "None") {
+                $(".custom-file-minus").css("visibility", "hidden");
+            }
+            $("#already_saved_file_id").val($(this).data('file-id'));
+
+            if ($(this).data('file') !== "None") {
+                $(".filename").html($(this).data('org-file-name'));
+            } else {
+                $(".filename").html("<span style=\"color: #a9a9a9 \">첨부할 파일을 선택하세요.</span>");
+            }
+            $("#notice_textarea_2").html($(this).data('contents'))
+        });
+    </script>
+{% endblock %}

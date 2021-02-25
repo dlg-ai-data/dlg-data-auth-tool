@@ -1,0 +1,36 @@
+{% load html_extras %}
+<div id="result_div">
+    <div class="text-align-center">
+        [검색 결과]
+    </div>
+    <div class="card-body-content">
+        <div class="datatable-default">
+            <table class="mb-0 table scroll" style="border: 1px solid #dfe6e9 !important;">
+                <thead style="background-color: #dfe6e9;">
+                <tr>
+                    <th class="white-border-left min-w-100px blr6px">이름</th>
+                    <th class="white-border-left w-100">이메일</th>
+                    <th class="white-border-left white-border-right min-w-66px brr6px">선택</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in search_result %}
+                    <tr>
+                        <td class="min-w-100px">{{ item|take_value_in_dict:"member__name" }}</td>
+                        <td class="thin_left_border w-100">{{ item|take_value_in_dict:"member__email" }}</td>
+                        <td class="thin_left_border" style="min-width: {% if search_result_count >= 6 %} 50px {% else %} 67px {% endif %} !important;">
+                            <label class="radio">
+                                <input type="radio" name="user-select-radio" value="{{ forloop.counter0 }}"
+                                       data-user-id="{{ item|take_value_in_dict:"member_id" }}"
+                                       data-user-email="{{ item|take_value_in_dict:"member__email" }}"
+                                       data-user-name="{{ item|take_value_in_dict:"member__name" }}"/>
+                                <span class="m-auto"></span>
+                            </label>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

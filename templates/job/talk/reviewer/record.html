@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <div class="card-header p-2-4-2-0 card-header-div">
+                    <div class="row ml-0 mr-0">
+                        <div class="row ml-0 mr-0 mt-auto mb-auto">
+                            <button id="data_filtering_btn"
+                                    type="button"
+                                    class="btn btn-text table_function btn-light-limeSoap ml-3px"
+                                    title="필터링 설정"
+                                    data-toggle="tooltip"
+                                    data-trigger="hover"
+                                    data-html="true"
+                                    data-modal-toggle="modal"
+                                    data-target="#table_filter_modal">
+                                <i class="fas fa-filter pr-0"></i>
+                            </button>
+                            <button id="reload-btn"
+                                    type="button"
+                                    class="btn btn-text table_function btn-light-primary ml-7px"
+                                    title="필터링 재적용"
+                                    data-trigger="hover"
+                                    data-toggle="tooltip" disabled>
+                                <i class="fas fa-sync-alt pr-0"></i>
+                            </button>
+                            <button id="no-filter-btn"
+                                    type="button"
+                                    class="btn btn-text table_function btn-light-danger ml-7px"
+                                    title="필터링 해제"
+                                    data-trigger="hover"
+                                    data-toggle="tooltip" disabled>
+                                <i class="fas fa-step-backward pr-0"></i>
+                            </button>
+                        </div>
+                        <div class="ml-5">
+                            <div>
+                                <span class="label label-dot label-orange mr-2"></span><span style="color: #38ada9;"><b>데이터세트</b></span>
+                                <i class="fas fa-caret-right font-posit" style="color: #82ccdd;"></i>
+                                <span id="filter_option_dataset"></span>
+                            </div>
+                            <div>
+                                <span class="label label-dot label-orange mr-2"></span><span style="color: #38ada9;"><b>어노테이터</b></span>
+                                <i class="fas fa-caret-right font-posit" style="color: #82ccdd;"></i>
+                                <span class="blank_sign_color"><b>이름 또는 연락처</b>: </span><span id="filter_option_annotator_nameTel"></span><span class="blank_sign_color"><b>,</b></span>
+                                <span class="blank_sign_color"><b>작업일자</b>: </span><span id="filter_option_jobDate"></span><span class="blank_sign_color"><b></b></span>
+
+                                <span class="label label-dot label-orange ml-5 mr-2"></span><span style="color: #38ada9;"><b>리뷰어</b></span>
+                                <i class="fas fa-caret-right font-posit" style="color: #82ccdd;"></i>
+                                <span class="blank_sign_color"><b>이름 또는 연락처</b>: </span><span id="filter_option_reviewer_nameTel"></span><span class="blank_sign_color"><b>,</b></span>
+                                <span class="blank_sign_color"><b>검수일자</b>: </span><span id="filter_option_inspectionDate"></span><span class="blank_sign_color"><b>,</b></span>
+                                <span class="blank_sign_color"><b>검수상태</b>: </span><span id="filter_option_inspectionStatus">,</span>
+                                <span class="blank_sign_color"><b>등급</b>: </span><span id="filter_option_grade"></span>
+                            </div>
+                            <div class="row ml-0 mr-0">
+                                <span class="label label-dot label-orange mr-2 mt-2"></span><span class="mt-1px" style="color: #38ada9;"><b>작업 내용&nbsp&nbsp</b></span>
+                                <i class="fas fa-caret-right font-posit" style="color: #82ccdd;"></i>
+                                <div class="ml-2 mt-1px">
+                                    <div>
+                                        <span class="blank_sign_color"><b>주제</b>: </span><span id="filter_option_domain"></span>
+                                    </div>
+                                    <div>
+                                        <span class="blank_sign_color"><b>대화유형</b>: </span><span id="filter_option_category"></span>
+                                    </div>
+                                    <div>
+                                        <span class="blank_sign_color"><b>원문내용</b>: </span><span id="filter_option_talk"></span>
+                                    </div>
+                                    <div>
+                                        <span class="blank_sign_color"><b>의도</b>: </span><span id="filter_option_intent"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <table class="mb-0 table table_default_min_height">
+                            <div id="table_spinner" class="spinner spinner-track spinner-lg spinner-primary" style="z-index: 1; visibility: hidden;"></div>
+                            <thead class="thead-dark">
+                            <tr>
+{#                                <th rowspan="2">#</th>#}
+                                <th rowspan="2">데이터세트명</th>
+                                <th colspan="3" class="pt05rem_pb05rem">어노테이터</th>
+                                <th colspan="5" class="pt05rem_pb05rem">리뷰어</th>
+                                <th rowspan="2">주제</th>
+                                <th rowspan="2">대화유형</th>
+                                <th rowspan="2">원문</th>
+                                <th rowspan="2">화자</th>
+                                <th rowspan="2">대화요약</th>
+                                <th rowspan="2">의도</th>
+                            </tr>
+                            <tr>
+                                <th class="sub_th">작업상태</th>
+                                <th class="sub_th">작업일자</th>
+                                <th class="sub_th">이름</th>
+                                <th class="sub_th">검수상태</th>
+                                <th class="sub_th">검수일자</th>
+                                <th class="sub_th">이름</th>
+                                <th class="sub_th">연락처</th>
+                                <th class="sub_th">반려메시지</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td colspan="30">
+
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center" id="table_pagenation">
+
+        </div>
+    </div>
+    <!--필터링 설정 모달-->
+    <div class="modal fade table_filter_modal" id="table_filter_modal" data-backdrop="false" tabindex="-1"
+         role="dialog"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header h-55px">
+                    <h5 class="modal-title"><b>필터링 설정</b></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <i aria-hidden="true" class="ki ki-close"></i>
+                    </button>
+                </div>
+                <form class="bg_fcfcfa" method="post">
+                    <input type="hidden" name="page" id="page" value='1'>
+                    <div class="modal-body ">
+                        <div>
+                            <label class="mb-0 mr-4 display_block font-size-h6"><b>데이터세트</b></label>
+                            <select class="form-control w-424px pr-0 pl-0 selectpicker ml-14px mt-14px" data-size="15"
+                                    name="dataset_ids" id="select_dataset" multiple data-selected-text-format="count">
+                                {% tag_options_text_choices class_name='DatasetSelectList' project_type="AH03" values=None blank_option=True blank_value="all" blank_text="전체" %}
+                            </select>
+                        </div>
+                        <hr>
+                        <div>
+                            <label class="mb-0 mr-4 display_block font-size-h6"><b>어노테이터 정보</b></label>
+                            <div class="row mr-0 ml-14px mt-14px">
+                                <div>
+                                    <label class="mb-0 mr-4 display_block">이름 및 연락처: </label>
+                                    <div class="mt-auto w-205px">
+                                        <input type="search" class="form-control" placeholder="미적용"
+                                               id="search_annotator_info" name="annotator_info"
+                                               autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">작업일자: </label>
+                                    <div class='input-group w-205px' id='dateRangePicker_job_date'>
+                                        <input type='text' class="form-control date_filter" readonly placeholder="미적용"
+                                               name="job_date" id="job_date"/>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <label class="mb-0 mr-4 display_block font-size-h6"><b>리뷰어 정보</b></label>
+
+                            <div class="row mr-0 ml-14px mt-14px">
+                                <div>
+                                    <label class="mb-0 mr-4 display_block">이름 및 연락처: </label>
+                                    <div class="mt-auto w-205px">
+                                        <input type="search" class="form-control" placeholder="미적용"
+                                               id="search_reviewer_info" name="reviewer_info"
+                                               autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">검수일자: </label>
+                                    <div class='input-group w-205px' id='dateRangePicker_inspection_date'>
+                                        <input type='text' class="form-control date_filter" readonly placeholder="미적용"
+                                               name="inspection_date" id="inspection_date"/>
+                                        <div class="input-group-append">
+                                            <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="mb-0 mr-4 display_block">검수상태: </label>
+                                    <select class="form-control w-205px pr-0 pl-0 selectpicker" name="inspectionStatus"
+                                            id="select_inspectionStatus">
+                                        {% tag_options_text_choices class_name='InspectionStatus' blank_option=True blank_text="전체" blank_value="all" %}
+                                    </select>
+                                </div>
+                                <div class="mt-3 ml-14px">
+                                    <label class="mb-0 mr-4 display_block">등급: </label>
+                                    <div class="mt-auto w-205px">
+                                        <select class="form-control w-100px pr-0 pl-0 selectpicker" name="grade" id="select_grade">
+                                            {% tag_options_text_choices class_name='MemberGrade' value=selected_grade blank_option=True blank_text="전체" blank_value="all" %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div>
+                            <label class="mb-0 mr-4 display_block font-size-h6"><b>작업 내용</b></label>
+                            <div class="row mr-0 ml-14px mt-14px">
+                                <div>
+                                    <label class="mb-0 mr-4 display_block">주제: </label>
+                                    <div class="mt-auto w-205px">
+                                        <input type="search" class="form-control" placeholder="미적용"
+                                               id="search_domain" name="domain"
+                                               autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="ml-14px">
+                                    <label class="mb-0 mr-4 display_block">대화유형: </label>
+                                    <div class="mt-auto w-205px">
+                                        <input type="search" class="form-control" placeholder="미적용"
+                                               id="search_category" name="category"
+                                               autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="mb-0 mr-4 display_block">원문내용: </label>
+                                    <div class="mt-auto w-205px">
+                                        <input type="search" class="form-control" placeholder="미적용"
+                                               id="search_talk" name="talk"
+                                               autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="ml-14px mt-3">
+                                    <label class="mb-0 mr-4 display_block">의도: </label>
+                                    <div class="mt-auto w-205px">
+                                        <input type="search" class="form-control" placeholder="미적용"
+                                               id="search_intent" name="intent"
+                                               autocomplete="off"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 0.5rem !important; height: 55px !important;">
+                        <button id="apply_bth"
+                                type="button"
+                                title="단축키: [Enter]"
+                                data-toggle="tooltip"
+                                data-trigger="hover"
+                                class="btn btn-facebook font-weight-bold">
+                            적용
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        set_daterangepicker('#dateRangePicker_job_date', {title: '작업일자 필터', maxDate: new Date()});
+        set_daterangepicker('#dateRangePicker_inspection_date', {title: '검수일자 필터', maxDate: new Date()});
+        multiple_select_dataset('#select_dataset', 'all');
+
+        $(document).ready(function () {
+            $('#table_spinner').css('left', $('table').width() / 2 - 13);
+            $('#table_spinner').css('top', $('table').height() / 2);
+            async_get_table_tr_html();
+        });
+
+        // 기본 필터링 입력 값
+        let dataset_ids = ['all'];
+        let reviewer_info = '';
+        let annotator_info='';
+        let job_date = '';
+        let reviewer_grade = 'all';
+        let inspection_date = '';
+        let inspectionStatus = 'all';
+        let domain = '';
+        let category = '';
+        let talk = '';
+        let intent = '';
+        let page = '1';
+
+        function pageForm(index) {
+            $("#page").val(index);
+            dataset_ids = $('#select_dataset').val();
+            reviewer_info = $('#search_reviewer_info').val();
+            annotator_info = $('#search_annotator_info').val();
+            job_date = $('#job_date').val();
+            inspection_date=$('#inspection_date').val();
+            reviewer_grade = $('#select_grade').val();
+            inspectionStatus = $('#select_inspectionStatus').val();
+            domain = $('#search_domain').val();
+            category = $('#search_category').val();
+            talk = $('#search_talk').val();
+            intent = $('#search_intent').val();
+            page = $('#page').val();
+            async_get_table_tr_html();
+        };
+
+        // 필터링 적용
+        $('#apply_bth').on('click', () => {
+            dataset_ids = $('#select_dataset').val();
+            reviewer_info = $('#search_reviewer_info').val();
+            annotator_info = $('#search_annotator_info').val();
+            job_date = $('#job_date').val();
+            inspection_date=$('#inspection_date').val();
+            reviewer_grade = $('#select_grade').val();
+            inspectionStatus = $('#select_inspectionStatus').val();
+            domain = $('#search_domain').val();
+            category = $('#search_category').val();
+            talk = $('#search_talk').val();
+            intent = $('#search_intent').val();
+            $('#page').val(1);
+            page = $('#page').val();
+
+            async_get_table_tr_html();
+            if ((dataset_ids.length === 1 && dataset_ids[0] === 'all')  && annotator_info.trim() === '' && reviewer_info.trim() === '' && job_date === '' && inspection_date === '' && reviewer_grade==='all' && inspectionStatus === 'all' && domain.trim() === '' && category.trim() === '' && talk.trim() === '' && intent.trim() === '') {
+                $('#no-filter-btn').attr('disabled', true);
+            } else {
+                $('#no-filter-btn').attr('disabled', false);
+            }
+        });
+
+        // 필터링 해제
+        $('#no-filter-btn').on('click', () => {
+            dataset_ids = ['all'];
+            reviewer_info = '';
+            annotator_info = '';
+            job_date = '';
+            inspection_date = ''
+            reviewer_grade = 'all';
+            inspectionStatus = 'all';
+            domain = '';
+            category = '';
+            talk = '';
+            page = '1';
+            async_get_table_tr_html();
+            $('#no-filter-btn').tooltip('hide')
+            $('#no-filter-btn').attr('disabled', true);
+        });
+
+        // 필터링 재적용
+        $('#reload-btn').on('click', () => {
+            async_get_table_tr_html();
+        });
+
+        // 비동기적으로 데이터 조회 후 html에 바인딩하여 생성한 것을 화면에 연결
+        const async_get_table_tr_html = () => {
+            const spinner = $('#table_spinner');
+            const table = $('table');
+            const tbody = $('tbody');
+            const last_tr_html = '<tr class="table_end"><td colspan="20" class="blr6px brr6px"></td></tr>';
+            const table_pagenation = $('#table_pagenation');
+            const fail_html = '<tr style="height: 800px !important; background-color: #fff9f1;"><td colspan="100">필터링 조건에 맞는 데이터가 없습니다.</td></tr>'
+            $('#reload-btn').attr('disabled', false);
+            $.ajax({
+                url: '{% url 'job:get_talk_reviewer_record_tbody_html' %}',
+                type: "POST",
+                data: {dataset_ids, annotator_info,job_date, reviewer_info, inspection_date, inspectionStatus, reviewer_grade, domain, category, talk, intent, page},
+                beforeSend: function () {
+                    spinner.css('left', $('table').width() / 2 - 13);
+                    spinner.css('top', $('table').height() / 2);
+                    spinner.css('visibility', 'visible');
+                    table.css('opacity', 0.6);
+                },
+                success: function (result) {
+                    const filter_text_dataset = result.dataset_names;
+
+                    if (result.total_count !== 0) {
+                        spinner.css('visibility', 'hidden');
+                        table.css('opacity', 1);
+                        tbody.empty();
+                        tbody.append(result.html);
+                        tbody.append(last_tr_html);
+                        table_pagenation.empty();
+                        table_pagenation.append(result.pagenation_html);
+                    } else {
+                        spinner.css('visibility', 'hidden');
+                        table.css('opacity', 1);
+                        tbody.empty();
+                        tbody.append(fail_html);
+                        tbody.append(last_tr_html);
+                        table_pagenation.empty();
+                    }
+                    // 필터링 적용 사항 표시
+                    if (dataset_ids.length === 1 && dataset_ids[0] === 'all') {
+                        $('#filter_option_dataset').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        let data_content = "";
+                        for (const i in filter_text_dataset) {
+                            data_content += '<span class="color_orange">[</span>'
+                            data_content += filter_text_dataset[i];
+                            data_content += '<span class="color_orange">]</span>'
+                            if (Number(filter_text_dataset.length - 1) !== Number(i)) {
+                                data_content += ', '
+                            }
+                        }
+                        $('#filter_option_dataset').html(data_content);
+                    }
+                    if (annotator_info.trim() === '') {
+                        $('#filter_option_annotator_nameTel').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_annotator_nameTel').html("'" + textLengthOverCut(annotator_info, 20) + "'");
+                    }
+
+                    if (job_date === '') {
+                        $('#filter_option_jobDate').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_jobDate').html(job_date);
+                    }
+
+                    if (reviewer_info.trim() === '') {
+                        $('#filter_option_reviewer_nameTel').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_reviewer_nameTel').html("'" + textLengthOverCut(reviewer_info, 20) + "'");
+                    }
+
+                    if(inspection_date === ''){
+                        $('#filter_option_inspectionDate').html('<span class="blank_sign_color">[전체]</span>');
+                    }else{
+                        $('#filter_option_inspectionDate').html(inspection_date);
+                    }
+
+                    if (inspectionStatus === 'all') {
+                        $('#filter_option_inspectionStatus').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        let data_content = ''
+                        if (inspectionStatus === 'AL01') {
+                            data_content = "<span class='label label-inline label-secondary' style='width: 63.5px;'>초기</span>";
+                        } else if (inspectionStatus === 'AL02') {
+                            data_content = "<span class='label label-inline label-light-warning' style='width: 63.5px;'>반려</span>";
+                        } else if (inspectionStatus === 'AL03') {
+                            data_content = "<span class='label label-inline label-light-success' style='width: 63.5px;'>승인</span>";
+                        } else if (inspectionStatus === 'AL04') {
+                            data_content = "<span class='label label-inline label-light-danger' style='width: 63.6px; padding: 0;'>불가</span>";
+                        }
+                        $('#filter_option_inspectionStatus').html(data_content);
+                    }
+
+                    if (reviewer_grade === 'all') {
+                        $('#filter_option_grade').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        let data_content = ''
+                        if (reviewer_grade === 'AA01') {
+                            data_content = "<span class='label label-inline label-success'>초급자</span>";
+                        } else if (reviewer_grade === 'AA02') {
+                            data_content = "<span class='label label-inline label-warning'>중급자</span>";
+                        } else if (reviewer_grade === 'AA03') {
+                            data_content = "<span class='label label-inline label-primary'>고급자</span>";
+                        } else if (reviewer_grade === 'AA04') {
+                            data_content = "<span class='label label-inline label-danger'>대화제공자</span>";
+                        }
+                        $('#filter_option_grade').html(data_content);
+                    }
+
+                    if (domain.trim() === '') {
+                        $('#filter_option_domain').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_domain').html("'" + textLengthOverCut(domain, 80) + "'");
+                    }
+
+                    if (category.trim() === '') {
+                        $('#filter_option_category').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_category').html("'" + textLengthOverCut(category, 80) + "'");
+                    }
+
+                    if (talk.trim() === '') {
+                        $('#filter_option_talk').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_talk').html("'" + textLengthOverCut(talk, 80) + "'");
+                    }
+                    
+                    if (intent.trim() === '') {
+                        $('#filter_option_intent').html('<span class="blank_sign_color">[전체]</span>');
+                    } else {
+                        $('#filter_option_intent').html("'" + textLengthOverCut(intent, 80) + "'");
+                    }
+                }
+            });
+        };
+    </script>
+{% endblock %}

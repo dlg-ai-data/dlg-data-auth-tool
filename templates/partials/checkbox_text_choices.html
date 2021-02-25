@@ -1,0 +1,8 @@
+{% load html_extras %}
+<div class="checkbox-inline justify-content-between">
+{% for key, val in choices %}
+    <label class="checkbox checkbox-lg" for="{{ name }}_{{ key }}">
+        <input type="checkbox" name="{{ name }}" value="{{ key }}" id="{{ name }}_{{ key }}" {% if key in value %}checked="checked"{% endif %} {% if disabled %}disabled{% endif %}/>
+    <span></span>{{ val }}</label>
+{% endfor %}
+</div>

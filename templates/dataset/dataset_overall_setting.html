@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 min-w-900px w-900px page-content">
+        <div class="accordion accordion-toggle-arrow mb-10" id="accordion_dataset_info">
+            <div class="card card-custom gutter-b example example-compact">
+                <div class="card-header accordion_title align-items-center" style="z-index: 1;">
+                    <button id="dataset_setting_btn"
+                            class="btn btn-dark w-60px font-weight-bold position-absolute"
+                            title="데이터세트 설정" data-toggle="tooltip" data-trigger="hover"
+                            style="z-index: 2; margin-left: 90%;">
+                        <i class="flaticon2-gear pr-0"></i>
+                    </button>
+                    <button id="dataset_setting_save_btn"
+                            onclick="dataset_info_save();"
+                            class="btn btn-success w-60px font-weight-bold position-absolute display_none"
+                            style="z-index: 2; margin-left: 90%;">
+                        저장
+                    </button>
+                    <div id="collapse_dataset_info_title" class="card-title w-100 justify-content-between"
+                         data-toggle="collapse"
+                         data-target="#collapse_dataset_info">
+                        <b style="color: white !important;">데이터세트 정보</b>
+                        <input id="dataset_id" type="hidden" value="{{ dataset_detail.id }}">
+                    </div>
+                </div>
+                <div id="collapse_dataset_info" class="collapse show bodyContents bg_fcfcfa"
+                     style="border-radius: 0px 0px 0.42rem 0.42rem;"
+                     data-parent="#accordion_dataset_info">
+                    {% include 'partials/dataset_info_display.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        let created_row_count = 0;
+
+        const newly_selected_label_type_list = []
+        const color_change_label_id_and_color_list = []
+
+        function dataset_info_save() {
+            const dataset_name = $('#dataset_name').val();
+            const terms = $('#terms').val();
+
+            if (dataset_name.trim() === '') {
+                swalFire("", '데이터세트 이름을 입력하세요.', "error", "확인")
+            } else if (terms.trim() === '') {
+                swalFire("", "신청 약관을 입력하세요.", "error", "확인")
+            } else {
+                const queryString = $("#dataset-setting-form").serialize();
+                swalWithBootstrapButtons.fire({
+                    title: '데이터세트 상세 설정 저장',
+                    text: "계속 진행하시겠습니까?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '확인',
+                    cancelButtonText: '취소',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{% url 'dataset:modify_dataset' %}',
+                            data: queryString,
+                            method: 'post',
+                            success: function (data) {
+                                if (data.result === true) {
+                                    swalFire("", "데이터세트 상세 설정이 저장되었습니다.", "success", "확인").then(() => {
+                                            $("#dataset_setting_save_btn").addClass("display_none");
+                                            $("#dataset_setting_btn").removeClass("display_none");
+                                            asyncDatasetDisplayHtmlCall()
+                                        }
+                                    );
+                                } else {
+                                    swalFire("데이터세트 저장 실패", data.error, "error", "확인");
+                                }
+                            }
+                        });
+                    }
+                })
+            }
+        }
+
+        $("#dataset_setting_btn").on("click", () => {
+            swalWithBootstrapButtons.fire({
+                title: '데이터세트 상세 설정',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $("#dataset_setting_save_btn").removeClass("display_none");
+                    $("#dataset_setting_btn").addClass("display_none");
+                    $("#collapse_dataset_info").addClass("show");
+                    $("#collapse_dataset_info_title").removeClass("collapsed");
+                    asyncDatasetSettingHtmlCall();
+                }
+            })
+        });
+
+        function asyncDatasetSettingHtmlCall() {
+            const dataset_id = $("#dataset_id").val();
+
+            const ajaxOption = {
+                url: '{% url 'dataset:dataset_info_set_html_return' %}',
+                async: true,
+                type: "POST",
+                data: {dataset_id},
+                dataType: "html",
+                cache: false
+            };
+
+            $.ajax(ajaxOption).done(function (data) {
+                $('.bodyContents').empty();
+                $('.bodyContents').html(data);
+
+                $('.selectpicker').selectpicker();
+            });
+        }
+
+        function asyncDatasetDisplayHtmlCall() {
+            const dataset_id = $("#dataset_id").val();
+
+            const ajaxOption = {
+                url: '{% url 'dataset:dataset_info_display_html_return' %}',
+                async: true,
+                type: "POST",
+                data: {dataset_id},
+                dataType: "html",
+                cache: false
+            };
+
+            $.ajax(ajaxOption).done(function (data) {
+                $('.bodyContents').empty();
+                $('.bodyContents').find("#temporary_script").remove();
+                $('.bodyContents').html(data);
+            });
+        }
+
+        function label_save(label_type_list) {
+            swalWithBootstrapButtons.fire({
+                title: '데이터세트 레이블 상세 설정',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const labelTotalInfo = {};
+                    const use_yn_check_label_id_list = [];
+
+                    // 어떤 데이터세트가 갖고 있는 레이블 타입의 종류를 담고 있는 label_type_list 를 순회한다.
+                    $.each(label_type_list, function (index, type) {
+                        const use_yn_checkBox = $("." + type + "_already_saved_labels input:checkbox[name=label_info]");
+                        $.each(use_yn_checkBox, function (idx, item) {
+                            if ($(this).is(":checked")) {
+                                use_yn_check_label_id_list.push(Number(item.value));
+                            }
+                        })
+
+                        const labelArray = [];
+
+                        $.each($("." + type + "_new_labels").children(), function (idx, item) {
+                            const labelInfo = {};
+                            $("#" + item.id + " input[name=label_info]").each(function (idx) {
+                                if (idx === 0) {
+                                    labelInfo.label = $("#" + item.id + " input[name=label_info]:eq(" + idx + ")").val()
+                                } else if (idx === 1) {
+                                    labelInfo.color = $("#" + item.id + " input[name=label_info]:eq(" + idx + ")").val()
+                                } else {
+                                    if ($("#" + item.id + " input:checkbox[name=label_info]").is(":checked") === true) {
+                                        labelInfo.use_yn = "Y";
+                                    } else {
+                                        labelInfo.use_yn = "N";
+                                    }
+                                }
+                            })
+                            labelArray.push(labelInfo)
+                        });
+                        labelTotalInfo[type] = labelArray
+                    });
+
+                    // 데이터세트에 새롭게 추가할 레이블 타입을 담고 있는 newly_selected_label_type_list 를 순회한다.
+                    $.each(newly_selected_label_type_list, function (index, type) {
+
+                        const labelArray = [];
+
+                        $.each($("." + type + "_new_labels").children(), function (idx, item) {
+                            const labelInfo = {};
+                            $("#" + item.id + " input[name=label_info]").each(function (idx) {
+                                if (idx === 0) {
+                                    labelInfo.label = $("#" + item.id + " input[name=label_info]:eq(" + idx + ")").val()
+                                } else if (idx === 1) {
+                                    labelInfo.color = $("#" + item.id + " input[name=label_info]:eq(" + idx + ")").val()
+                                } else {
+                                    if ($("#" + item.id + " input:checkbox[name=label_info]").is(":checked") === true) {
+                                        labelInfo.use_yn = "Y";
+                                    } else {
+                                        labelInfo.use_yn = "N";
+                                    }
+                                }
+                            })
+                            labelArray.push(labelInfo)
+                        });
+                        labelTotalInfo[type] = labelArray
+                    });
+
+                    labelTotalInfo["dataset_id"] = $("#dataset_id").val();
+                    labelTotalInfo["use_yn_check_label_id_list"] = use_yn_check_label_id_list;
+                    labelTotalInfo["color_change_label_id_and_color_list"] = color_change_label_id_and_color_list;
+                    $.ajax({
+                        url: '{% url 'dataset:modify_dataset_label' %}',
+                        data: JSON.stringify(labelTotalInfo),
+                        dataType: 'json',
+                        method: 'post',
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "설정한 레이블 정보가 저장되었습니다.", "success", "확인").then(() => {
+                                    location.reload()
+                                });
+                            } else {
+                                swalFire("레이블 저장 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        }
+
+        function label_row_create(type) {
+            const html = `<div id="label_row_` + created_row_count + `" class="row mb-10 mt-10 label_div">
+                            <input class="form-control w-200px" name="label_info" type="text" placeholder="레이블 이름 입력"/>
+                            <input class="form-control w-200px" name="label_info" type="color"/>
+                            <span class="switch switch-outline switch-icon switch-primary">
+                                <label>
+                                 <input type="checkbox" name="label_info" checked/>
+                                 <span></span>
+                                </label>
+                            </span>
+                            <button type="button"
+                                    onclick="label_row_delete('label_row_` + created_row_count + `')"
+                                    class="btn btn-white m-auto"
+                                    style="width:40px; height:40px; border-radius: 20px; border: 1px solid black"
+                            >
+                                <i class="fas fa-minus pr-0"></i>
+                            </button>
+                          </div>`;
+            $("." + type + "_new_labels").append(html);
+            created_row_count++;
+        }
+
+        function label_row_delete(id) {
+            $("#" + id + "").remove();
+            created_row_count--;
+        }
+
+        $("#label_type").change(function () {
+            const SelectedLabelTypeList = $(this).val(); // 현재 select 에서 새롭게 선택된 레이블 타입의 value 값 (ex. AX03, AX04 등)이 list 로 저장됨.
+            if (SelectedLabelTypeList.length < newly_selected_label_type_list.length) {
+                for (type of newly_selected_label_type_list) {
+                    if (!SelectedLabelTypeList.includes(type)) {
+                        // 선택이 취소된 div 제거하는 곳
+                        $("#" + type + "").remove();
+                    }
+                }
+            }
+            // 이미 div 가 생성되어있는 레이블 타입은 그대로 둬야하고 아닌 것은 새로 div 를 생성해줘야 함.
+            for (type of SelectedLabelTypeList) {
+                if (!newly_selected_label_type_list.includes(type)) {
+                    newly_selected_label_type_list.push(type);
+                    let get_type_display = "";
+
+                    {% for key, val in labelType_choices %}
+                        if (type === '{{ key }}') {
+                            get_type_display = '{{ val }}';
+                        }
+                    {% endfor %}
+                    const html = `<div id="` + type + `">
+                                    <label><b>` + get_type_display + `</b></label>
+                                    <div class="` + type + `_label-section label-section mb-10">
+                                        <div class="` + type + `_already_saved_labels">
+
+                                        </div>
+                                        <div class="` + type + `_new_labels">
+                                            <div id="basic_label_row" class="row mb-10 mt-10 label_div">
+                                            <input class="form-control w-200px" name="label_info" type="text" placeholder="레이블 이름 입력"/>
+                                            <input class="form-control w-200px" name="label_info" type="color"/>
+                                            <span class="switch switch-outline switch-icon switch-primary">
+                                                <label>
+                                                 <input type="checkbox" name="label_info" checked/>
+                                                 <span></span>
+                                                </label>
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div class="row ml-0 mr-0 w-100 mb-10 align-items-center justify-content-between">
+                                            <button type="button" id="` + type + `_label_add_btn"
+                                                    onclick="label_row_create('` + type + `')"
+                                                    class="btn btn-white m-auto"
+                                                    title="레이블 추가" data-toggle="tooltip" data-trigger="hover"
+                                                    style="width:40px; height:40px; border-radius: 20px; border: 1px solid black"
+                                            >
+                                                <i class="fas fa-plus pr-0"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>`;
+
+                    $(".total_label_setting_div").append(html)
+                }
+            }
+        });
+
+        $(".label_color_picker").on("change", (e) => {
+            const label_id = $(e.currentTarget).data("label-id");
+            const color = $(e.currentTarget).val()
+            color_change_label_id_and_color_list.push({label_id, color})
+        })
+
+        $('.accordion').on('show.bs.collapse', function (e) {
+            $(e.currentTarget).children().children('.accordion_title').css('border-radius', '0.42rem 0.42rem 0px 0px')
+        });
+
+        $('.accordion').on('hide.bs.collapse', function (e) {
+            $(e.currentTarget).children().children('.accordion_title').css('border-radius', '0.42rem')
+        });
+
+    </script>
+{% endblock %}

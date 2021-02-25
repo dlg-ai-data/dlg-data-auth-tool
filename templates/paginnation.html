@@ -1,0 +1,68 @@
+{% load humanize %}
+<div class="datatable-pager datatable-paging-loaded">
+    <ul class="datatable-pager-nav my-2 mb-sm-0">
+        {% if items.paginator.num_pages >= 1 %}
+            <li>
+                {% if items.number > 1 %}
+                    <a href="javascript:pageForm('1')" title="First"
+                       class="datatable-pager-link datatable-pager-link-first"><i class="flaticon2-fast-back"></i></a>
+                {% else %}
+                    <a href="javascript:;" title="First"
+                       class="datatable-pager-link datatable-pager-link-first datatable-pager-link-disabled"
+                       disabled="disabled"><i class="flaticon2-fast-back"></i></a>
+                {% endif %}
+            </li>
+            <li>
+                {% if items.has_previous %}
+                    <a href="javascript:pageForm('{{ items.previous_page_number }}')" title="Prev"
+                       class="datatable-pager-link datatable-pager-link-prev"><i class="flaticon2-back"></i></a>
+                {% else %}
+                    <a href="javascript:;" title="Prev"
+                       class="datatable-pager-link datatable-pager-link-prev datatable-pager-link-disabled"
+                       disabled="disabled"><i class="flaticon2-back"></i></a>
+                {% endif %}
+            </li>
+            {% for num in paginator_range %}
+                {% if items.number == num %}
+                    <li style=""></li>
+                    <li><a href="javascript:pageForm('{{ num }}')"
+                           class="datatable-pager-link datatable-pager-link-number datatable-pager-link-active"
+                           title="{{ num }}">{{ num }}</a></li>
+                    <li style=""></li>
+                {% else %}
+                    <li style=""></li>
+                    <li><a href="javascript:pageForm('{{ num }}')"
+                           class="datatable-pager-link datatable-pager-link-number" data-page="{{ num }}"
+                           title="{{ num }}">{{ num }}</a></li>
+                    <li style=""></li>
+                {% endif %}
+            {% endfor %}
+            <li>
+                {% if items.has_next %}
+                    <a href="javascript:pageForm('{{ items.next_page_number }}')" title="Next"
+                       class="datatable-pager-link datatable-pager-link-next"><i class="flaticon2-next"></i></a>
+                {% else %}
+                    <a href="javascript:;" title="Next"
+                       class="datatable-pager-link datatable-pager-link-next datatable-pager-link-disabled"
+                       disabled="disabled"><i class="flaticon2-next"></i></a>
+                {% endif %}
+            </li>
+            <li>
+                {% if items.paginator.num_pages != items.number %}
+                    <a href="javascript:pageForm('{{ items.paginator.num_pages }}')" title="Last"
+                       class="datatable-pager-link datatable-pager-link-last"><i class="flaticon2-fast-next"></i></a>
+                {% else %}
+                    <a href="javascript:;" title="Last"
+                       class="datatable-pager-link datatable-pager-link-last datatable-pager-link-disabled"
+                       disabled="disabled"><i class="flaticon2-fast-next"></i></a>
+                {% endif %}
+            </li>
+        {% endif %}
+    </ul>
+
+</div>
+{% if total_count > 0 and total_isVisibled is None %}
+    <div class="bottom-0" style="height: 20px !important;">
+        <label class="page_total_count"> 총 <b>{{ total_count|intcomma }}</b> 건</label>
+    </div>
+{% endif %}

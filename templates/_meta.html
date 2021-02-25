@@ -1,0 +1,46 @@
+{% load static %}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<!--begin::Fonts-->
+<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+<link rel="icon" type="image/png" href="{% static 'favicon-16x16.png' %}" sizes=16x16>
+<link rel="icon" type="image/png" href="{% static 'favicon-32x32.png' %}" sizes=32x32>
+<link rel="icon" type="image/png" href="{% static 'favicon-96x96.png' %}" sizes=96x96>
+<link rel="apple-touch-icon" href="{% static 'apple-icon.png' %}">
+<link rel="apple-touch-icon" sizes="76x76" href="{% static 'apple-icon-76x76.png' %}">
+<link rel="apple-touch-icon" sizes="120x120" href="{% static 'apple-icon-120x120.png' %}">
+<link rel="apple-touch-icon" sizes="152x152" href="{% static 'apple-icon-152x152.png' %}">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
+<link href="http://fonts.googleapis.com/earlyaccess/nanumgothiccoding.css" rel="stylesheet">
+<!--end::Fonts-->
+<!--begin::Global Theme Styles(used by all pages)-->
+<link href="{% static 'plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'plugins/custom/prismjs/prismjs.bundle.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
+<!--end::Global Theme Styles-->
+<!--begin::Layout Themes(used by all pages)-->
+<link href="{% static 'plugins/custom/uppy/uppy.bundle.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/themes/layout/header/base/light.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/themes/layout/header/menu/light.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/themes/layout/brand/dark.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/themes/layout/aside/dark.css' %}" rel="stylesheet" type="text/css" />
+
+<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+<link href="{%  static 'css/file.type.css' %}?ver={% now "U" %}" rel="stylesheet" type="text/css" />
+
+<script src="{% static 'plugins/global/plugins.bundle.js' %}"></script>
+<script src="{% static 'plugins/custom/prismjs/prismjs.bundle.js' %}"></script>
+<script src="{% static 'js/scripts.bundle.js' %}"></script>
+<script src="{% static 'js/circles.js' %}"></script>
+<script src="{% static 'plugins/custom/fullcalendar/fullcalendar.bundle.js' %}"></script>
+<script src="{% static 'js/pages/widgets.js' %}"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<!--end::Global Theme Bundle-->
+
+<!--일단 필요한 기능을 만들기 위해 임의로 만든 CSS와 JS 파일입니다.-->
+<link href="{% static 'css/pages/my-css.css' %}?ver={% now "U" %}" rel="stylesheet" type="text/css" />
+<script src="{% static 'js/pages/my-script.js' %}?ver={% now "U" %}"></script>
+<title>Vaiv Administrator</title>
+

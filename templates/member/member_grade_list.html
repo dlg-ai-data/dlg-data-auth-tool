@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'member:grade_list' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입경로: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" name="join_source"
+                                        id="select_join_source">
+                                    {% tag_options_text_choices class_name='member_join_source' value=selected_join_source blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">회원등급: </label>
+                                <select class="form-control w-100px pr-0 pl-0 selectpicker" name="grade"
+                                        id="select_grade">
+                                    {% tag_options_text_choices class_name='MemberGrade' value=selected_grade blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="이메일, 이름 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if searched_word is not None and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 934px">
+                            <table class="mb-0 table">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th rowspan="2">#</th>
+                                    <th rowspan="2">이메일</th>
+                                    <th rowspan="2">이름</th>
+                                    <th rowspan="2">가입경로</th>
+                                    <th rowspan="2">회원등급</th>
+                                    <th rowspan="2">역할</th>
+                                    <th rowspan="2">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if user_count != 0 %}
+                                    {% for someone in all_grades %}
+                                        <tr class="record {% if forloop.last and blank_count > 0 %} thick_bottom_border {% endif %}">
+                                            <input class="member_id" type="hidden" value="{{ someone.member.id }}">
+                                            <td class="row_num">{{ forloop.counter0|page_seq_print:all_grades }}</td>
+                                            <td class="thick_left_border">{{ someone.member.email }}</td>
+                                            <td>{{ someone.member.name }}</td>
+                                            <td>
+                                                {% advanced_default_if_none value=someone.member.memberaddition2member.get_member_join_source_display default_text="미등록" %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% if someone.grade_code != 'AA04' %}
+                                                    <select data-grade="{{ someone.grade_code }}"
+                                                            class="form-control selectpicker grade-selector w-150px m-auto pr-0"
+                                                            onchange="detect_tr_change($(this).parents('tr'))"
+                                                    >
+                                                        {% tag_options_text_choices class_name='MemberGrade' value=someone.grade_code blank_option=True %}
+                                                    </select>
+                                                {% else %}
+                                                    <span class="label label-inline label-danger">{{ someone.get_grade_code_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="thick_left_border">
+                                                {% if someone.member.role_code != 'MR04' %}
+                                                    <select data-role="{{ someone.member.role_code }}"
+                                                            class="form-control selectpicker role-selector w-140px m-auto pr-0"
+                                                            onchange="detect_tr_change($(this).parents('tr'))"
+                                                    >
+                                                        {% tag_options_text_choices class_name='MemberRole' value=someone.member.role_code blank_option=True %}
+                                                    </select>
+                                                {% else %}
+                                                    {{ someone.member.get_role_code_display }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="thick_left_border" style="width: 50px; padding-left: 0px;">
+                                                <button data-id="{{ someone.member.id }}"
+                                                        class="btn actions-btn user-grade-update-btn btn-secondary"
+                                                        title="회원 등급 변경" data-toggle="tooltip" data-trigger="hover"
+                                                        onclick="change_one_memberGrade(this, '{% url 'member:member_grade_update' %}')"
+                                                        disabled><i class="fas fa-user-cog"></i></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% for i in "x"|rjust:blank_count %}
+                                        {% if blank_count != 0 %}
+                                            <tr></tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 870px !important;">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=70 search_fail_message="검색은 이메일과 이름에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                <tr class="table_end">
+                                    <td colspan="4" class="blr6px"></td>
+                                    <td>
+                                        <select class="form-control selectpicker all-grade-selector w-100px m-auto pr-0"
+                                                onchange="detect_allGradeSelector_change()"
+                                        >
+                                            {% tag_options_text_choices class_name='MemberGrade' blank_option=True %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-control selectpicker all-role-selector w-140px m-auto pr-0"
+                                                onchange="detect_allRoleSelector_change()"
+                                        >
+                                            {% tag_options_text_choices class_name='MemberRole' blank_option=True %}
+                                        </select>
+                                    </td>
+                                    <td style="width: 56px; padding-left: 0px; padding-right: 10px" class="brr6px">
+                                        <button class="btn actions-btn all-user-grade-update-btn btn-secondary"
+                                                onclick='change_multiple_memberGrade("{% url 'member:member_grade_update' %}")'
+                                                title="회원 등급 일괄 변경" data-toggle="tooltip" data-trigger="hover" disabled>
+                                            <i class="fas fa-user-cog"></i></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=all_grades paginator_range=paginator_range total_count=user_count %}
+        </div>
+    </div>
+    <script type="text/javascript">
+        let member_role = {{ member_role|safe }};
+        let member_grade = {{ member_grade|safe }};
+        let page = {{ page }};
+    </script>
+    <script src="{% static 'js/pages/member/member_grade_list.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <script src="{% static 'js/pages/text_summary/common.js' %}"></script>
+    <script type="text/javascript">
+
+    </script>
+    <div class="container page-content" style="width : 100vw">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-12">
+                <form id="notice-register-form" method="post" novalidate
+                >
+                    <div class="card card-custom card-stretch">
+                        <div class="card-body mw-100">
+                            <div class="mb-2" style="display: flex;justify-content: space-between;">
+                                <div class="text-left" style="width: 100%">
+
+                                    <div class="alert alert-primary" role="alert">
+
+                                        <label style="font-size: 30px">
+                                            대화 조각 원문
+                                        </label>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="card-body pl-1 pt-1 pr-1 pb-2">
+
+                            <textarea id="talk_source" class="form-control"
+                                      style="height: 50vh;font-size: 1.2rem;" name="contents"
+                                      placeholder="대화 원문을 입력해 주세요"
+
+                            ></textarea>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label text-lg-left"  >이름 : </label>
+                                    <div class="col-lg-3">
+                                        <input id="provider_name" type="text" class="form-control" value="{{ user.name }}" placeholder="이름을 입력해주세요." readonly="True" />
+                                    </div>
+                                    <label class="col-lg-2 col-form-label text-lg-left"  >이메일: </label>
+                                    <div class="col-lg-3">
+                                        <input id="provider_email" type="text" class="form-control" value="{{ user.email }}" placeholder="이메일을 입력해주세요." readonly="True" />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label text-lg-left" >전화번호: </label>
+                                    <div class="col-lg-3">
+                                        <input id="provider_phone_number" type="text"  value="{{ user.tel_no }}" class="form-control" maxlength="13" placeholder="전화번호를 입력해주세요."readonly="True" />
+                                    </div>
+                                    <label class="col-lg-2 col-form-label text-lg-left" >데이터 세트: </label>
+                                    <div class="col-lg-3">
+                                        <select class="form-control w-205px pr-0 pl-0 selectpicker"
+                                                id="provider_dataset_id" >
+                                            {% tag_options_text_choices class_name='DatasetSelectList' values='' blank_option=False%}
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="button" id="saveBtn" class="btn btn-primary mr-2"
+                                        onclick="provider_save()">
+                                    <i id="saveBtnIcon" class="fas fa-check"></i>
+                                    저장
+                                </button>
+
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'js/pages/text_summary/reviewer_inspect_register.js' %}"></script>
+    <script type="text/javascript">
+        {#const regExp_ID = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;#}
+        const regExp_Phone =/^01([0|1|6|7|8|9]?)-?([0-9]{3,4})-?([0-9]{4})$/;
+        // text summary 목록 화면으로
+        function provider_save() {
+            console.log($('#talk_source').val())
+            console.log($('#provider_name').val())
+            console.log($('#provider_email').val())
+            console.log($('#provider_phone_number').val())
+            console.log($('#provider_dataset_id').val())
+            let talkSrc = $('#talk_source').val();
+            let nameVal=  $('#provider_name').val()
+            let emailVal =  $('#provider_email').val()
+            let phoneVal =  $('#provider_phone_number').val()
+            if (talkSrc === '' || talkSrc.trim() === '') {
+                swalFire("등록 에러", "대화 원문을 입력해 주세요", "error", "확인")
+            } else  if (nameVal === '') {
+                swalFire("등록 에러", "이름을 입력해주세요.", "error", "확인")
+            } else  if (emailVal.match(regExp_ID) == null || emailVal.trim() === '') {
+                swalFire("등록 에러", "이메일 양식에 맞지 않습니다.", "error", "확인")
+            } else if (phoneVal.match(regExp_Phone) == null || phoneVal.trim() === '') {
+                swalFire("등록 에러", "핸드폰 번호 양식에 맞지 않습니다..", "error", "확인")
+            }  else {
+                {#alert("성공")#}
+                $.ajax({
+                    url: "{% url 'job:ProviderSourceSave' %}",
+                    type: "post",
+                    data: {'src' : talkSrc,
+                        'name' :  nameVal,
+                        'email' : emailVal,
+                        'phone' : phoneVal,
+                        'dataset_id' : $('#provider_dataset_id').val(),
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        if(data.result){
+                            swalWithBootstrapButtons.fire({
+                                title: '승인',
+                                text: data.msg,
+                                icon: 'success',
+                                confirmButtonText: '닫기',
+
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.href = '{% url 'job:talk_provider' %}'
+                                }
+                            });
+
+                        }
+                        else {
+                            alert(data.msg)
+                        }
+                    },
+                    error: function (request, status, error) {
+                        console.log(request, status, error)
+                    }
+                });
+
+            }
+
+        }
+        $("#provider_phone_number").focus(function () {
+            $(this).val("")
+        })
+        $("#provider_phone_number").change(function () {
+            if ($(this).val().length !== 13)
+                $(this).val("")
+        })
+        $("#provider_phone_number").on('propertychange change keyup paste input', function () {
+            if ($(this).val().length === 3)
+                $(this).val($(this).val().concat('-'))
+            if ($(this).val().length === 8)
+                $(this).val($(this).val().concat('-'))
+        });
+
+
+    </script>
+
+{% endblock %}

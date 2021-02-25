@@ -1,0 +1,173 @@
+{% load html_extras %}
+{% load humanize %}
+<form id="dataset-setting-form" method="post" id="dataset-frm">
+    <div class="card-body pb-0">
+        <input type="hidden" class="form-control" id="dataset_id" name="id" value="{{ dataset_detail.id }}"/>
+        <div class="row d-flex flex-row justify-content-around m-0">
+            <div class="form-group w-400px">
+                <label><b class="required_sign">데이터세트 이름</b></label>
+                <input type="text" class="form-control" value="{{ dataset_detail.dataset_name }}"
+                       id="dataset_name" name="dataset_name"/>
+            </div>
+            <div class="form-group w-182px">
+                <label><b>데이터세트 진행율(%)</b></label>
+                <input type="text" class="form-control text-right" value="{% if dataset_detail.progress_value != 0 %}{{ dataset_detail.progress_value }}{% endif %}"
+                       name="progress_value"
+                       placeholder="0%"
+                       id="progress_value" max="100" min="0"
+                       pattern="[0-9]+"
+                       oninput="this.value = this.value.replace(/[^0-9\,]/g, '');"/>
+            </div>
+            <div class="form-group">
+                <label><b>요청기관</b></label>
+                <input type="text" class="form-control w-182px"
+                       placeholder="요청기관을 입력하세요." id="request_orga" name="request_orga"
+                       value="{{ dataset_detail.request_orga }}"/>
+            </div>
+            <div class="form-group">
+                <label><b>등록 일자</b></label>
+                <input type="text" class="form-control w-182px input_background_color_dfe4ea"
+                       value="{{ dataset_detail.reg_date | date:'Y-m-d (H:i)' }}" readonly/>
+            </div>
+            <div class="form-group">
+                <label><b>작업 시작 및 종료 일자</b></label>
+                <div class='input-group w-205px' id='dateRangePicker_job_start_end_date'>
+                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                           style="background-color: white !important;"
+                           name="job_start_end_date" id="set_job_start_end_date"
+                            {% if dataset_detail.job_start_date is not None and dataset_detail.job_end_date is not None %}
+                           value="{{ dataset_detail.job_start_date| date:'Y-m-d' }} ~ {{ dataset_detail.job_end_date| date:'Y-m-d' }}"
+                            {% else %}
+                           value=""
+                            {% endif %}
+                    />
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group visibility_hidden">
+                <label><b></b></label>
+                <input type="text" class="form-control w-159px"/>
+            </div>
+            <div class="form-group">
+                <label><b>단가(원)</b></label>
+                <input type="text"
+                       class="form-control w-182px inputPrice"
+                       id="price"
+                       name="price"
+                       pattern="[0-9]+"
+                       oninput="this.value = this.value.replace(/[^0-9\,]/g, '');"
+                       placeholder="0"
+                       value="{{ dataset_detail.price|zero_to_blank|intcomma }}"/>
+            </div>
+            <div class="form-group">
+                <label><span class="label label-inline label-outline-success">Annotator</span> <b>지급방식</b></label>
+                <div>
+                    <select class="form-control w-182px pr-0 pl-0 selectpicker"
+                            id="annotator_pay_type"
+                            name="annotator_pay_type">
+                        {% tag_options_text_choices class_name='PayType' value=dataset_detail.annotator_pay_type blank_option=False %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><span class="label label-inline label-outline-warning" style="width: 71px;">Reviewer</span> <b>지급방식</b></label>
+                <div>
+                    <select class="form-control w-182px pr-0 pl-0 selectpicker"
+                            id="reviewer_pay_type"
+                            name="reviewer_pay_type">
+                        {% tag_options_text_choices class_name='PayType' value=dataset_detail.reviewer_pay_type blank_option=False %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group label-light-primary">
+                <label><span class="label label-inline label-outline-dark" style="width: 78px;">대화제공자</span> <b>지급방식</b></label>
+                <div>
+                    <select class="form-control w-182px pr-0 pl-0 selectpicker"
+                            id="provider_pay_type"
+                            name="provider_pay_type">
+                        {% tag_options_text_choices class_name='PayType' value=dataset_detail.provider_pay_type blank_option=False %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row d-flex flex-row justify-content-around m-0">
+            {% for item in dataset_grade %}
+                <div>
+                    <div style="margin-left: -12px; margin-bottom: 10px;">
+                        {% if item.get_grade_code_display == '초급자' %}
+                            <span class="label label-inline label-success">초급자</span> <b>설정</b>
+                        {% elif item.get_grade_code_display == '중급자' %}
+                            <span class="label label-inline label-warning">중급자</span> <b>설정</b>
+                        {% elif item.get_grade_code_display == '고급자' %}
+                            <span class="label label-inline label-primary">고급자</span> <b>설정</b>
+                        {% elif item.get_grade_code_display == '대화제공자' %}
+                            <span class="label label-inline label-danger">대화제공자</span> <b>설정</b>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <input type="hidden" name="grade_code" value="{{ item.grade_code }}">
+                        <input type="hidden" name="grade_id" value="{{ item.id }}">
+                        <div class="form-group">
+                            <label><b>작업가능 여부</b></label>
+                            <div class="w-85px">
+                                <select class="form-control pr-0 pl-0 selectpicker"
+                                        data-gradeCode="{{ item.grade_code }}"
+                                        id="{{ item.grade_code }}_job_use_yn" name="job_use_yn">
+                                    {% tag_options_text_choices class_name='UseType' value=item.job_use_yn blank_option=False %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group ml-5">
+                            <label><b>등급단가</b></label>
+                            <div class="w-65px">
+                                <input class="form-control inputPrice" type="text"
+                                       pattern="[0-9]+"
+                                       placeholder="0"
+                                       oninput="this.value = this.value.replace(/[^0-9\,]/g, '');"
+                                       data-gradeCode="{{ item.grade_code }}"
+                                       id="{{ item.grade_code }}_grade_price" name="grade_price"
+                                       value="{{ item.grade_price|zero_to_blank|intcomma }}"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="form-group col-12">
+            <label><b class="required_sign">신청 약관</b></label>
+            <textarea class="form-control" rows="20" id="terms" placeholder="약관을 작성하세요."
+                      name="terms">{{ dataset_detail.terms|default_if_none:'' }}</textarea>
+        </div>
+    </div>
+    {% csrf_token %}
+</form>
+<script>
+    // 작업 시작 일자 ~ 작업 종료 일자
+    $('#dateRangePicker_job_start_end_date').daterangepicker({
+        minDate: '{{ dataset_detail.reg_date }}',
+        title: '작업 시작 및 종료 일자 선택'
+    }, function (start, end, label) {
+        $('#dateRangePicker_job_start_end_date .form-control').val(start.format('YYYY-MM-DD') + ' ~ ' + end.format('YYYY-MM-DD'));
+    });
+
+  jQuery(document).ready(function () {
+
+    $('.inputPrice').on('focus', (e) => {
+        let number = $(e.currentTarget).val();
+        if(!isBlank(number)){
+            number = number.replace(/,/g,'');
+            $(e.currentTarget).val(number);
+        }
+    });
+
+    $('.inputPrice').on('blur', (e) => {
+        let number = $(e.currentTarget).val();
+        if(!isBlank(number) && isNumeric(number)) {
+            number = currencyFormatter(number);
+            $(e.currentTarget).val(number);
+        }
+    })
+});
+</script>

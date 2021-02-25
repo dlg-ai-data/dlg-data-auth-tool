@@ -1,0 +1,116 @@
+{% load html_extras %}
+{% load humanize %}
+<div class="card-body pb-0">
+    <div class="row d-flex flex-row justify-content-around m-0">
+        <div class="form-group w-400px">
+            <label><b>데이터세트 이름</b></label>
+            <input type="text" class="form-control" value="{{ dataset_detail.dataset_name }}"
+                   id="dataset_name" name="dataset_name" disabled/>
+        </div>
+        <div class="form-group w-182px">
+            <label><b>데이터세트 진행율</b></label>
+            <input type="text" class="form-control text-right" value="{{ dataset_detail.progress_value }}%" disabled/>
+        </div>
+        <div class="form-group">
+            <label><b>요청기관</b></label>
+            <div class="form-control w-182px input_background_color_dfe4ea">
+                {% advanced_default_if_none value=dataset_detail.request_orga default_text="미기입" %}
+            </div>
+        </div>
+        <div class="form-group">
+            <label><b>등록 일자</b></label>
+            <input type="text" class="form-control w-182px"
+                   value="{{ dataset_detail.reg_date | date:'Y-m-d (H:i)' }}" disabled/>
+        </div>
+        <div class="form-group">
+            <label><b>작업 시작 일자</b></label>
+            <div class="form-control w-182px input_background_color_dfe4ea">
+                {% advanced_default_if_none value=dataset_detail.job_start_date default_text="미설정" filter="date_Y-m-d" %}
+            </div>
+        </div>
+        <div class="form-group">
+            <label><b>작업 종료 일자</b></label>
+            <div class="form-control w-182px input_background_color_dfe4ea">
+                {% advanced_default_if_none value=dataset_detail.job_end_date default_text="미설정" filter="date_Y-m-d" %}
+            </div>
+        </div>
+        <div class="form-group">
+            <label><b>단가</b></label>
+            <input type="text" class="form-control w-182px text-right" value="{{ dataset_detail.price|intcomma }}원"
+                   disabled/>
+        </div>
+        <div class="form-group">
+            <label><span class="label label-inline label-outline-success">Annotator</span> <b>지급방식</b></label>
+            <div class="form-control w-182px input_background_color_dfe4ea">
+                {% if dataset_detail.annotator_pay_type == "AJ01" %}
+                    <span class="label label-inline label-outline-info">기타</span>
+                {% else %}
+                    <span class="label label-inline label-outline-dark">월마감</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="form-group">
+            <label><span class="label label-inline label-outline-warning" style="width: 71px;">Reviewer</span> <b>지급방식</b></label>
+            <div class="form-control w-182px input_background_color_dfe4ea">
+                {% if dataset_detail.reviewer_pay_type == "AJ01" %}
+                    <span class="label label-inline label-outline-info">기타</span>
+                {% else %}
+                    <span class="label label-inline label-outline-dark">월마감</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="form-group label-light-primary">
+            <label><span class="label label-inline label-outline-dark" style="width: 81px;">대화제공자</span> <b>지급방식</b></label>
+            <div class="form-control w-182px input_background_color_dfe4ea">
+                {% if dataset_detail.provider_pay_type == "AJ01" %}
+                    <span class="label label-inline label-outline-info">기타</span>
+                {% else %}
+                    <span class="label label-inline label-outline-dark">월마감</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="row d-flex flex-row justify-content-around m-0">
+        {% for item in dataset_grade %}
+            <div>
+                <div style="margin-left: -12px; margin-bottom: 10px;">
+                    {% if item.get_grade_code_display == '초급자' %}
+                        <span class="label label-inline label-success">초급자</span> <b>설정</b>
+                    {% elif item.get_grade_code_display == '중급자' %}
+                        <span class="label label-inline label-warning">중급자</span> <b>설정</b>
+                    {% elif item.get_grade_code_display == '고급자' %}
+                        <span class="label label-inline label-primary">고급자</span> <b>설정</b>
+                    {% elif item.get_grade_code_display == '대화제공자' %}
+                        <span class="label label-inline label-danger">대화제공자</span> <b>설정</b>
+                    {% endif %}
+                </div>
+                <div class="row">
+                    <input type="hidden" name="grade_code" value="{{ item.grade_code }}">
+                    <input type="hidden" name="grade_id" value="{{ item.id }}">
+                    <div class="form-group">
+                        <label><b>작업가능 여부</b></label>
+                        <div class="form-control w-85px input_background_color_dfe4ea">
+                            {% if item.job_use_yn == "Y" %}
+                                <span class="label label-inline label-light-primary">Y</span>
+                            {% else %}
+                                <span class="label label-inline label-light-danger">N</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                <div class="form-group ml-5">
+                        <label><b>등급단가</b></label>
+                        <div class="w-65px">
+                            <input class="form-control text-right" value="{{ item.grade_price|intcomma }}원"
+                                   disabled/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="form-group col-12">
+        <label><b>신청 약관</b></label>
+        <textarea class="form-control" rows="20" id="terms"
+                  name="terms" disabled>{{ dataset_detail.terms|default_if_none:'' }}</textarea>
+    </div>
+</div>

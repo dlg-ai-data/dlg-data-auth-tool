@@ -1,0 +1,2 @@
+{% load html_extras %}
+<span class="m-auto search_highlight">검색어: '<span style="color: #3699FF;" id="searched_word">{{ word | cut_text:text_limit }}</span>{% if word|length > text_limit %}<span style="color: #b2bec3">...생략...</span>{% endif %}'</span>

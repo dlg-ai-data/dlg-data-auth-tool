@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <script src="{% static 'js/pages/text_summary/common.js' %}"></script>
+
+    <div class="container page-content" style="width : 100vw">
+        <div class="text-right">
+            <button type="button" class="btn btn-success mb-2" title="목록으로"
+                    onclick="fnGoListPage('{% url 'job:talk_reviewer_source_list' %}')">목록으로
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-custom card-stretch">
+                    <div class="card-body">
+                        {#                        <div class="mb-2" style="display: flex;justify-content: space-between;">#}
+                        {#                            <div class="text-left">#}
+                        {#                                <button type="button" id="skipBtn" class="btn btn-warning"#}
+                        {#                                        onclick="fnJobBack('{% url 'text_summary:refine_job_back' %}')"#}
+                        {#                                        title="해당 작업건을 회수처리 합니다."#}
+                        {#                                        {% if job_text_detail.job_status == 'AK05' or job_text_detail.job_status == 'AL03' %}#}
+                        {#                                        disabled#}
+                        {#                                        {% endif %}#}
+                        {#                                >회수#}
+                        {#                                </button>#}
+                        {#                                <button type="button" id="deleteBtn" class="btn btn-light-danger"#}
+                        {#                                        onclick="fnPageDelete('{% url 'text_summary:refine_delete_page' %}')"#}
+                        {#                                        title="해당 페이지를 삭제합니다."#}
+                        {#                                        {% if job_text_detail.job_status == 'AK05' or job_text_detail.job_status == 'AL03' %}#}
+                        {#                                        disabled#}
+                        {#                                        {% endif %}#}
+                        {#                                >페이지 삭제#}
+                        {#                                </button>#}
+                        {#                            </div>#}
+                        {#                        </div>#}
+                         <div class="text-center" style="width: 100%">
+                                  <div class="alert alert-primary" role="alert">
+
+                                        <label style="font-size: 30px">
+                                            원문
+                                        </label>
+                                    </div>
+                            </div>
+                        <div class="card-body pl-1 pt-1 pr-1 pb-2">
+
+                            <textarea id="talk_source" class="form-control"
+                                      style="height: 50vh;font-size: 1.2rem;" name="contents"
+                                      placeholder="대화 원문입니다."
+                                      readonly
+                            >{{ source_detail.talk }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-custom card-stretch">
+                    <form id="notice-register-form" method="post" novalidate>
+                        <input type="hidden" id="originArea" value="{{ text_summary_detail.summary }}"/>
+                        <input type="hidden" id="textSummaryId" value="{{ text_summary_detail.id }}"/>
+                        <input type="hidden" id="textSummaryPageNum" value="{{ text_summary_detail.page_number }}"/>
+                        <input type="hidden" id="textSummaryStatus"
+                               value="{{ text_summary_detail.job_summary_status }}"/>
+
+                        <div class="card-body">
+                        {% if  source_detail.inspection_status == 'AL01' %}
+                            <div class="mb-2" style="display: flex;justify-content: space-between;">
+                                <div class="text-right">
+                                    <button type="button" title="임시 저장"
+                                            data-toggle="tooltip" data-trigger="hover"
+                                            class="btn btn-text table_function btn-light-google"
+                                            onclick="Save('True')">
+                                        <i class="fa fa-bookmark" style="padding-right: 0 !important;"
+                                           aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" title="검수 완료"
+                                            data-toggle="tooltip" data-trigger="hover"
+                                            class="btn btn-text table_function btn-light-success"
+                                            onclick="Save('False')"
+                                    >
+                                        <i class="fa fa-paper-plane" style="padding-right: 0 !important;"
+                                           aria-hidden="true"></i>
+                                    </button>
+                                     <button type="button" title="불가"
+                                            data-toggle="tooltip" data-trigger="hover"
+                                            class="btn btn-text table_function btn-light-instagram"
+                                            onclick="Impossible()"
+                                    >
+                                      <i class="fa fa-times" style="padding-right: 0 !important;"
+                                           aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="form-group">
+                                    <textarea id="summaryTextarea" class="form-control"
+                                              style="height: 50vh;font-size: 1.2rem;" name="contents"
+                                              placeholder="원문을 비식별화 작업 하거나 오타 등을 수정합니다."
+                                            {#                                            {% if job_text_detail.job_status == "AK05" or job_text_detail.job_status == "AL03" %}#}
+                                            {#                                              disabled#}
+                                            {#                                            {% endif %}#}
+                                    >{{ source_detail.de_identificated_talk | default_if_none:source_detail.talk }}</textarea>
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label text-lg-left" width="150px">비식별화:</label>
+                                    <div class="col-lg-3">
+                                        <select class="form-control w-90px pr-0 pl-0 selectpicker" name="deidentification_status"
+                                                id="select_deidentification_status">
+                                            {% tag_options_text_choices class_name='DeIdentificationStatus' value=source_detail.de_identificated_status blank_option=False default_text='작업전' blank_value="AY02" %}</select>
+                                    </div>
+                                    <label class="col-lg-2 col-form-label text-lg-left" width="150px">화자 수: </label>
+                                    <div class="col-lg-3">
+                                        <input id="talker_count" type="number" class="form-control" min="1" value="{{ source_detail.talker_count }}"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label text-lg-left" width="150px" >말차례 수: </label>
+                                    <div class="col-lg-3">
+                                        <input id="turn_talk_count" type="number" class="form-control" min="1" value="{{ source_detail.turn_talk_count }}"/>
+                                    </div>
+                                    <label class="col-lg-2 col-form-label text-lg-left" width="150px" >말풍선 수: </label>
+                                    <div class="col-lg-3">
+                                        <input id="speechbubble_count" type="number" class="form-control" min="1" value="{{ source_detail.speechbubble_count }}"/>
+                                    </div>
+                                </div>
+                                  <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label text-lg-left" width="150px" >대화주제: </label>
+                                    <div class="col-lg-3">
+                                        <input id="domain" type="text" class="form-control" value="{{ source_detail.domain|default_if_none:'' }}"/>
+                                    </div>
+                                    <label class="col-lg-2 col-form-label text-lg-left" width="150px" >대화유형: </label>
+                                    <div class="col-lg-3">
+                                        <input id="category" type="text" class="form-control"  value="{{ source_detail.category|default_if_none:'' }}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+      function fnGoListPage(url) {
+          {% if source_detail.inspection_status == 'AL01' %}
+            swalWithBootstrapButtons.fire({
+                title: '목록으로 이동',
+                text: "저장하지 않은 작업내용이 사라집니다.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '목록으로',
+                cancelButtonText: '취소',
+
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.href = url
+                }
+            });
+          {% else %}
+              location.href = url
+          {% endif %}
+        }
+
+          function Impossible() {
+            swalWithBootstrapButtons.fire({
+                title: '불가',
+                html: "<textarea id='msg' style='font-size: 15px; height: 80px; width:100%' placeholder='불가 메시지를 입력해주세요'></textarea>",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: '불가 처리 하기',
+                cancelButtonText: '취소',
+
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'job:JobSourceImpossable' %}",
+                        type: "get",
+                        dataType : "json",
+                        data: {'source_id' : '{{ source_detail.id }}',
+                            'msg' : $('#msg').val(),
+                            'member_id': '{{ member_id }}'
+                        },
+                        success: function (data) {
+
+                            if(data.result){
+
+                                swalWithBootstrapButtons.fire({
+                                    title: '불가 처리 완료',
+                                    text: data.msg,
+                                    icon: 'success',
+                                    confirmButtonText: '확인',
+
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+
+
+                                        location.href = '{% url 'job:talk_reviewer_source_list' %}'
+                                    }
+                                });
+
+                            }
+                              else {
+                                alert(data.msg)
+                            }
+                        },
+                        error: function (request, status, error) {
+                            console.log(request, status, error)
+                        }
+                    });
+
+
+                }
+            });
+        }
+
+        function Save(isTmp){
+            {#let table =#}
+
+            let data = Object()
+            data.de_identificated_talk = $('#summaryTextarea').val()
+            data.de_identificated_status = $('#select_deidentification_status').val()
+            data.speechbubble_count = $('#speechbubble_count').val()
+            data.turn_talk_count = $('#turn_talk_count').val()
+            data.talker_count = $('#talker_count').val()
+             data.domain = $('#domain').val()
+            data.category = $('#category').val()
+            data.member_id = '{{ member_id }}'
+             data.source_id = '{{ source_detail.id }}'
+             data.isTmp = isTmp
+
+            console.log(data)
+            $.ajax({
+                url: "{% url 'job:JobSourceSave' %}",
+                type: "get",
+                dataType : "JSON",
+                data:  {'data' : JSON.stringify(data)},
+                success: function (data) {
+                    if(data.result){
+                        alert(data.msg)
+                        if(data.type ==='save')
+                            location.href = '{% url 'job:talk_reviewer_source_list' %}'
+                    }
+                     else {
+                         alert(data.msg)
+                     }
+                },
+                error: function (request, status, error) {
+                    console.log(request, status, error)
+                }
+            });
+        }
+
+    </script>
+{% endblock %}

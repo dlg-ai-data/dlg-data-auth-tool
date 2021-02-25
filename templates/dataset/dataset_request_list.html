@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'dataset:dataset_request' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div row">
+                        <div class="row justify-content-end ml-auto" style="margin-right: 3px !important;">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입 경로: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" name="join_source"
+                                        id="select_join_source">
+                                    {% tag_options_text_choices class_name='member_join_source' value=selected_join_source blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_join_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="join_date" id="set_join_date"
+                                           value="{{ join_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">수정일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_modf_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="modf_date" id="set_modf_date"
+                                           value="{{ modf_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">데이터세트:</label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="dataset_ids" id="select_dataset_name" multiple data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">참여 구분: </label>
+                                <select class="form-control w-120px pr-0 pl-0 selectpicker" name="request_type"
+                                        id="select_request_type">
+                                    {% tag_options_text_choices class_name='ProjectJoinType' value=selected_request_type blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">신청 상태: </label>
+                                <select class="form-control w-100px pr-0 pl-0 selectpicker" name="request_status"
+                                        id="select_request_status">
+                                    <option value="all"
+                                            {% if selected_request_status == "all" %}selected{% endif %}>전체
+                                    </option>
+                                    <option data-content="<span class='label label-inline label-light-primary'>신청중</span>"
+                                            value="AV01"
+                                            {% if selected_request_status == "AV01" %}selected{% endif %}>신청중
+                                    </option>
+                                    <option data-content="<span style='color:#a9a9a9;'>거절</span>"
+                                            value="AV02"
+                                            {% if selected_request_status == "AV02" %}selected{% endif %}>
+                                        거절
+                                    </option>
+                                    <option data-content="<span style='font-weight:bold;'>승인</span>"
+                                            value="AV03"
+                                            {% if selected_request_status == "AV03" %}selected{% endif %}>
+                                        승인
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="이메일, 이름, 데이터세트명 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if searched_word is not None and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                    <input type="hidden" name="sort_criterion" id="sort_criterion" value="{{ sort_criterion }}">
+                    <input type="hidden" name="upDown" id="upDown" value="{{ upDown }}">
+                    <div class="card-body-content">
+                        <div class="datatable-default">
+                            <div style="min-height: 919px">
+                                <table class="mb-0 table" style="min-width: 1435px !important;">
+                                    <thead class="thead-dark">
+                                    <tr>
+                                        <th rowspan="2"
+                                            class="sort sort_default"
+                                            data-sort-criterion="id"
+                                            data-upDown="">
+                                            #
+                                        </th>
+                                        <th colspan="3" class="pt05rem_pb05rem">신청자 정보</th>
+                                        <th colspan="2" class="pt05rem_pb05rem">신청 데이터세트 정보</th>
+                                        <th colspan="3" class="pt05rem_pb05rem">작업 정보</th>
+                                        <th rowspan="2"
+                                            class="w-100px sort sort_default"
+                                            data-sort-criterion="request_date"
+                                            data-upDown="">
+                                            신청일자
+                                        </th>
+                                        <th colspan="2" class="pt05rem_pb05rem">입력여부확인</th>
+                                        <th rowspan="2"
+                                            class="sort sort_default"
+                                            data-sort-criterion="request_status"
+                                            data-upDown="">
+                                            상태
+                                        </th>
+                                        <th rowspan="2">Actions</th>
+                                    </tr>
+                                    <tr>
+                                        <th rowspan="2"
+                                            class="sort sort_default sub_th"
+                                            data-sort-criterion="email"
+                                            data-upDown="">
+                                            이메일
+                                        </th>
+                                        <th rowspan="2"
+                                            class="sort sort_default sub_th"
+                                            data-sort-criterion="name"
+                                            data-upDown="">
+                                            이름
+                                        </th>
+                                        <th rowspan="2"
+                                            class="sort sort_default sub_th"
+                                            data-sort-criterion="join_source"
+                                            data-upDown="">
+                                            가입경로
+                                        </th>
+                                        <th rowspan="2"
+                                            class="sort sort_default sub_th"
+                                            data-sort-criterion="dataset_name"
+                                            data-upDown="">
+                                            데이트세트명
+                                        </th>
+                                        <th rowspan="2"
+                                            class="pt-0 pb-0 sort sort_default sub_th"
+                                            data-sort-criterion="project_grade"
+                                            data-upDown="">
+                                            참여등급
+                                        </th>
+                                        <th rowspan="2" class="w-120px sub_th">작업기간</th>
+                                        <th rowspan="2"
+                                            class="sort sort_default sub_th"
+                                            data-sort-criterion="request_type"
+                                            data-upDown="">
+                                            참여역할
+                                        </th>
+                                        <th class="sub_th">부가정보</th>
+                                        <th class="sub_th">은행정보</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% if request_count != 0 %}
+                                        {% for item in all_requests %}
+                                            <tr {% if forloop.last and blank_count > 0 %}
+                                                class="thick_bottom_border" {% endif %}>
+                                                <td>{{ forloop.counter0|page_seq_print:all_requests }}</td>
+                                                <td class="thick_left_border">{{ item.member.email }}</td>
+                                                <td>{{ item.member.name }}</td>
+                                                <td>
+                                                    {% advanced_default_if_none value=item.member.memberaddition2member.get_member_join_source_display default_text="미등록" %}
+                                                </td>
+                                                <td>{{ item.dataset.dataset_name }}</td>
+                                                <td class="thick_left_border">
+                                                    {{ item.member.id|get_member_grade_name }}
+                                                </td>
+                                                <td>{{ item.dataset.job_start_date | date:"Y-m-d" }}
+                                                    ~<br>{{ item.dataset.job_end_date | date:"Y-m-d" }}</td>
+                                                <td>
+                                                    {% if item.request_type == "AU01" %}
+                                                        <span class="label label-inline label-outline-success">Annotator</span>
+                                                    {% else %}
+                                                        <span class="label label-inline label-outline-warning"
+                                                              style="width: 71px;">Reviewer</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="two_line_date thick_left_border">{{ item.request_date | date:'Y-m-d (H:i)' }}</td>
+                                                <td class="thick_left_border">
+                                                    {% if item.member.memberaddition2member == None or item.member.memberaddition2member.age_code == None %}
+                                                        {% advanced_default_if_none value=None default_text="미입력" %}
+                                                    {% else %}
+                                                        입력완료
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if item.member.memberaddition2member == None or item.member.memberaddition2member.bank_no == None %}
+                                                        {% advanced_default_if_none value=None default_text="미입력" %}
+                                                    {% else %}
+                                                        입력완료
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if item.request_status == "AV01" %}
+                                                        <span class="label label-inline label-light-primary">신청중</span>
+                                                    {% elif item.request_status == "AV02" %}
+                                                        <span style="color: #a9a9a9;">거절</span>
+                                                    {% elif item.request_status == "AV03" %}
+                                                        <span style='font-weight:bold;'>승인</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="thick_left_border">
+                                                    <button type="button"
+                                                            title="승인" data-toggle="tooltip" data-trigger="hover"
+                                                            data-id="{{ item.id }}"
+                                                            data-member-id="{{ item.member.id }}"
+                                                            data-dataset-id="{{ item.dataset.id }}"
+                                                            data-request-type="{{ item.request_type }}"
+                                                            data-adm-yn="{{ item.member.memberaddition2member.adm_yn }}"
+                                                            class="btn actions-btn project-request-approve-btn
+                                                            {% if item.request_status != "AV01" or item.member.memberaddition2member == None or item.member.memberaddition2member.age_code == None %}btn-light-skype"
+                                                            disabled {% else %} btn-skype" {% endif %}
+                                                    >
+                                                    <i class="far fa-check-circle"></i>
+                                                    </button>
+                                                    <button type="button" title="반려"
+                                                            data-toggle="tooltip" data-trigger="hover"
+                                                            data-id="{{ item.id }}"
+                                                            class="btn actions-btn project-request-reject-btn
+                                                            {% if item.request_status != "AV01" or item.member.memberaddition2member == None or item.member.memberaddition2member.age_code == None %}btn-light-instagram"
+                                                            disabled {% else %} btn-instagram" {% endif %}
+                                                    >
+                                                    <i class="far fa-times-circle"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        {% for i in "x"|rjust:blank_count %}
+                                            {% if blank_count != 0 %}
+                                                <tr></tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr style="height: 855px !important;">
+                                            {% td_search_fail_message searched_word=searched_word text_limit=70 search_fail_message="검색은 이메일과 이름 그리고 데이터세트명에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                        </tr>
+                                    {% endif %}
+                                    <tr class="table_end">
+                                        <td colspan="13" class="blr6px"></td>
+                                        <td style="width: 56px; padding-left: 0px; padding-right: 10px" class="brr6px">
+                                            <button type="button" title="일괄 승인"
+                                                    data-toggle="tooltip" data-trigger="hover"
+                                                    class="btn actions-btn project-request-all-approve-btn
+                                        {% if not current_page_acceptable_request_obj_list %}btn-light-skype"
+                                                    disabled {% else %} btn-skype" {% endif %}
+                                            >
+                                            <i class="far fa-check-circle"></i>
+                                            </button>
+                                            <button type="button" title="일괄 반려"
+                                                    data-toggle="tooltip" data-trigger="hover"
+                                                    class="btn actions-btn project-request-all-reject-btn
+                                        {% if not current_page_acceptable_request_obj_list %}btn-light-instagram"
+                                                    disabled {% else %} btn-instagram" {% endif %}
+                                            >
+                                            <i class="far fa-times-circle"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=all_requests paginator_range=paginator_range total_count=request_count %}
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        set_daterangepicker('#dateRangePicker_join_date', {title: '가입일자 필터', maxDate: new Date()});
+        set_daterangepicker('#dateRangePicker_modf_date', {title: '수정일자 필터', maxDate: new Date()});
+
+        // 데이터세트 신청관리 > 승인 버튼 Ajax 작업
+        $(document).on("click", ".project-request-approve-btn", (e) => {
+            e.preventDefault();
+            const id = $(e.currentTarget).data('id');
+            const member_id = $(e.currentTarget).data('member-id');
+            const dataset_id = $(e.currentTarget).data('dataset-id');
+            const request_type = $(e.currentTarget).data('request-type');
+            const adm_yn = $(e.currentTarget).data('adm-yn');
+
+            let msg_text = "계속 진행하시겠습니까?";
+            if (adm_yn === "N") {
+                msg_text = "사용자의 부가정보 및 은행정보가 아직 승인되지 않았습니다. 확인없이 강제로 사용자 정보를 승인하고 데이터세트 신청을 받아드리겠습니까?";
+            }
+
+            swalWithBootstrapButtons.fire({
+                title: '데이터세트 신청 승인',
+                text: msg_text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'dataset:approve_dataset' %}?id=" + id + "&request_type=" + request_type + "&dataset_id=" + dataset_id + "&member_id=" + member_id,
+                        method: "GET",
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "해당 신청이 승인되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("데이터세트 신청 승인 실패", data.error, "error", "확인").then(() => {
+                                    location.reload();
+                                });
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        // 데이터세트 신청관리 > 반려 버튼 Ajax 작업
+        $(document).on("click", ".project-request-reject-btn", (e) => {
+            e.preventDefault();
+            const id = $(e.currentTarget).data('id');
+            swalWithBootstrapButtons.fire({
+                title: '데이터세트 신청 반려',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'dataset:reject_dataset' %}?id=" + id,
+                        method: "GET",
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "해당 데이터세트 신청이 반려되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("데이터세트 신청 반려 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        // 일괄 승인 처리
+        $(document).on("click", ".project-request-all-approve-btn", (e) => {
+            e.preventDefault();
+            const data = {"current_page_acceptable_request_obj_list":{{ current_page_acceptable_request_obj_list|safe }}}
+            data['current_page_acceptable_request_obj_list'] = JSON.stringify(data['current_page_acceptable_request_obj_list'])
+            swalWithBootstrapButtons.fire({
+                title: '현재 페이지 신청 건 일괄 승인',
+                text: "아직 어떠한 사용자의 부가정보 및 은행정보가 승인되어있지 않을 수 있습니다. 해당하는 사용자 정보를 확인없이 강제 승인 처리 후 데이터세트 신청을 받아드리겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'dataset:approve_dataset' %}",
+                        method: "POST",
+                        data: data,
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "현재 페이지의 데이터세트 신청 건들이 일괄 승인되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("데이터세트 신청 건 일괄 승인 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        // 일괄 반려 처리
+        $(document).on("click", ".project-request-all-reject-btn", (e) => {
+            e.preventDefault();
+            const data = {"current_page_acceptable_request_obj_list":{{ current_page_acceptable_request_obj_list|safe }}}
+            data['current_page_acceptable_request_obj_list'] = JSON.stringify(data['current_page_acceptable_request_obj_list'])
+            swalWithBootstrapButtons.fire({
+                title: '현재 페이지 신청 건 일괄 반려',
+                text: "계속 진행하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '확인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'dataset:reject_dataset' %}",
+                        method: "POST",
+                        data: data,
+                        success: function (data) {
+                            if (data.result === true) {
+                                swalFire("", "현재 페이지의 데이터세트 신청 건들이 일괄 반려되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("데이터세트 신청 건 일괄 반려 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+        $('#select_request_status').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_projectType').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_request_type').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_join_source').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_join_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_modf_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% block content %}
+    <script src="{% static 'js/pages/text_summary/common.js' %}"></script>
+    <script type="text/javascript">
+
+    </script>
+    <div class="container page-content" style="width : 100vw">
+        {% csrf_token %}
+        <div class="text-right">
+            <button type="button" class="btn btn-success mb-2" title="목록으로"
+                    onclick="fnGoListPage('{% url 'job:talk_reviewer_list' %}')">목록으로
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-custom card-stretch">
+                    <div class="card-body mw-100">
+                        <div class="mb-2" style="display: flex;justify-content: space-between;">
+                            <div class="text-left" style="width: 100%">
+                                  <div class="alert alert-primary" role="alert">
+
+                                        <label style="font-size: 30px">
+                                            원문
+                                        </label>
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="card-body pl-1 pt-1 pr-1 pb-2">
+
+                            <textarea id="talk_source" class="form-control"
+                                      style="height: 50vh;font-size: 1.2rem;" name="contents" readonly
+                                      placeholder="대화 원문입니다."
+
+                            >{{ source_detail }}</textarea>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-lg-2 col-form-label text-lg-left" width="150px">비식별화:</label>
+                            <div class="col-lg-3">
+                                <select class="form-control w-90px pr-0 pl-0 selectpicker"
+                                        name="deidentification_status"
+                                        id="select_deidentification_status">
+                                    {% tag_options_text_choices class_name='DeIdentificationStatus' value=selected_deidentification_status blank_option=False default_text='작업전' blank_value="AY02" %}</select>
+                            </div>
+                            <label class="col-lg-2 col-form-label text-lg-left" width="150px">화자 수: </label>
+                            <div class="col-lg-3">
+                                <input id="talker_count" type="number" class="form-control" min="1" value="{{ talker_count }}"/>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-lg-2 col-form-label text-lg-left" width="150px">말차례 수: </label>
+                            <div class="col-lg-3">
+                                <input id="turn_talk_count" type="number" class="form-control" min="1" value="{{ turn_talk_count }}"/>
+                            </div>
+                            <label class="col-lg-2 col-form-label text-lg-left" width="150px">말풍선 수: </label>
+                            <div class="col-lg-3">
+                                <input id="speechbubble_count" type="number" class="form-control" min="1" value="{{ speechbubble_count }}"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" style="margin-top: 10px; margin-bottom: 50px ">
+
+                <div class="card card-custom card-stretch">
+
+                    <div class="card-body-content">
+                        <div >
+                            <form id="notice-register-form" method="post" novalidate
+                            >
+                                {% csrf_token %}
+                                {% if inspection_status == 'AL01' %}
+                                <div class=" p-2-4-2-0 ">
+
+                                    <button type="button" title="반려"
+                                            data-toggle="tooltip" data-trigger="hover"
+                                            class="btn btn-text table_function btn-light-instagram"
+                                            onclick="Reject()"
+                                    >
+                                        <i class="fa fa-times" style="padding-right: 0 !important;"
+                                           aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" title="승인"
+                                            data-toggle="tooltip" data-trigger="hover"
+                                            class="btn btn-text table_function btn-light-success"
+                                            onclick="Confirm()"
+                                    >
+                                        <i class="far fa-circle" style="padding-right: 0 !important;"
+                                           aria-hidden="true"></i>
+                                    </button>
+
+                                </div>
+                                {% endif %}
+                            </form>
+                            <div class="datatable-default">
+                                <div style="height: 650px; overflow: auto" id="table_list">
+
+                                    <table class="mb-0 table " id='qalist'>
+                                        <thead class="thead-dark">
+                                        <tr style="height: 50px; ">
+                                            <th style="width:5%;" class="fixedHeader">#</th>
+                                            <th style="width:10%" class="fixedHeader">화자</th>
+                                            <th style="width:auto" class="fixedHeader">요약</th>
+                                            <th style="width:15%" class="fixedHeader">Q/A</th>
+                                            <th style="width:10%" class="fixedHeader">의도</th>
+                                        </tr>
+
+                                        </thead>
+                                        <tbody>
+                                        {% if table_count == 0 %}
+                                            {% for item in jobtalksummary %}
+                                                <tr >
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td><input type="text" value="{{ item.talker }}" placeholder="화자" style="width:100%"/></td>
+                                                    <td><input type="text" value="{{ item.talk_summary }}" placeholder="요약" style="width:100%"/></td>
+                                                    <td>
+                                                        <select class="form-control  pr-0 pl-0 selectpicker"
+                                                                style="width:100%">
+                                                            {% tag_options_text_choices class_name='QAType' value=item.qa_type  blank_option=False  %}</select>
+                                                    </td>
+                                                    <td><input type="text" placeholder="의도"  value="{{ item.intent }}" style="width:100%"/></td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for i in "x"|rjust:table_count %}
+                                                {% if 15 != 0 %}
+                                                    <tr >
+                                                        <td><input type="checkbox"  name="_check" style="width:25px; height: 25px"></td>
+                                                        <td><input type="text" placeholder="화자" style="width:100%"/></td>
+                                                        <td><input type="text" placeholder="요약" style="width:100%"/></td>
+                                                        <td>
+                                                            <select class="form-control  pr-0 pl-0 selectpicker"
+                                                                    style="width:100%">
+                                                                {% tag_options_text_choices class_name='QAType' value=selected_qatype  blank_option=False  %}</select>
+                                                        </td>
+                                                        <td><input type="text" placeholder="의도" style="width:100%"/></td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        <tr hidden class="tmp">
+                                            <td ><input type="checkbox"  name="_check" ></td>
+                                            <td><input type="text" placeholder="화자" style="width:100%"/></td>
+                                            <td><input type="text" placeholder="요약" style="width:100%"/></td>
+                                            <td>
+                                                <select class="form-control  pr-0 pl-0 selectpicker"
+                                                        style="width:100%">
+                                                    {% tag_options_text_choices class_name='QAType' value=selected_qatype blank_option=False   %}</select>
+                                            </td>
+                                            <td><input type="text" placeholder="의도" style="width:100%"/></td>
+                                        </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="{% static 'js/pages/text_summary/reviewer_inspect_register.js' %}"></script>
+    <script type="text/javascript">
+
+        function Reject() {
+            swalWithBootstrapButtons.fire({
+                title: '반려',
+                html: "<textarea id='msg' style='font-size: 15px; height: 80px; width:100%' placeholder='반려 메시지를 입력해주세요'></textarea>",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: '반려하기',
+                cancelButtonText: '취소',
+
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{% url 'job:JobTalkReject' %}",
+                        type: "get",
+                        dataType : "json",
+                        data: {'source_id' : '{{ source_id }}',
+                            'msg' : $('#msg').val(),
+                            'member_id' : '{{ member_id }}',
+                        },
+                        success: function (data) {
+
+                            if(data.result){
+
+                                swalWithBootstrapButtons.fire({
+                                    title: '반려',
+                                    text: data.msg,
+                                    icon: 'success',
+                                    confirmButtonText: '확인',
+
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+
+
+                                        location.href = '{% url 'job:talk_reviewer_list' %}'
+                                    }
+                                });
+
+                            }
+                              else {
+                                alert(data.msg)
+                            }
+                        },
+                        error: function (request, status, error) {
+                            console.log(request, status, error)
+                        }
+                    });
+
+
+                }
+            });
+        }
+
+        // text summary 목록 화면으로
+        function fnGoListPage(url) {
+            swalWithBootstrapButtons.fire({
+                title: '목록으로 이동',
+                text: "저장하지 않은 작업내용이 사라집니다.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '목록으로',
+                cancelButtonText: '취소',
+
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.href = url
+                }
+            })
+        }
+
+        function Confirm(){
+
+             let data = Array()
+            $('.table ').each(function(){
+                $(this).find('tr').each(function(){
+                    //do your stuff, you can use $(this) to get current cell
+
+                    {#console.log(  $(this))#}
+                    const length = data.length;
+                    let data_dbj = Object();
+                    data_dbj.rowIndex = $(this)[0].rowIndex;
+                    let index = 0;
+                    $(this).find('input[type=text]').each(function(){
+                        if(index ===0)
+                            data_dbj.talker = $(this).val();
+                        if(index ===1)
+                            data_dbj.summary = $(this).val();
+                        if(index ===2)
+                            data_dbj.intent = $(this).val();
+                        index++
+                    });
+                    $(this).find('select').each(function(){
+                        data_dbj.qatype = $(this).val();
+                    });
+                    data[length] = JSON.stringify(data_dbj)
+                })
+            })
+            data.shift()
+            data.pop()
+
+            $.ajax({
+                url: "{% url 'job:JobTalkConfirm' %}",
+                type: "get",
+                dataType : "json",
+                data: {'list[]' : data, 'source_id' : '{{ source_id }}', 'member_id' : '{{ member_id }}',},
+                success: function (data) {
+
+                    if(data.result){
+                        swalWithBootstrapButtons.fire({
+                            title: '승인',
+                            text: '성공적으로 승인되었습니다.',
+                            icon: 'success',
+                            confirmButtonText: '닫기',
+
+                        }).then((result) => {
+                            console.log(result)
+                            if (result.isConfirmed) {
+
+
+                                location.href = '{% url 'job:talk_reviewer_list' %}'
+                            }
+                        });
+
+                    }
+                    else {
+                                alert(data.msg)
+                            }
+                },
+                error: function (request, status, error) {
+                    console.log(request, status, error)
+                }
+            });
+        }
+
+
+    </script>
+    <style>
+        .fixedHeader {
+            z-index: 1000;
+            position: sticky;
+            top: 0;
+        }
+        input[type="text"]
+        {
+            font-size:16px;
+
+    </style>
+{% endblock %}

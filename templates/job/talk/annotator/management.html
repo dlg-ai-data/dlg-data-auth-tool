@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load html_extras %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'job:talk_annotator_management' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-grass ml-7px"
+                                id="talk-annotator-list-excel"
+                                title="talk 어노테이터 엑셀"
+                                data-trigger="hover"
+                                data-toggle="tooltip">
+                            <i class="fas fa-download pr-0 pl-1"></i>
+                        </button>
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">데이터세트</label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" data-size="15"
+                                        name="dataset_id" id="select_dataset_name" multiple data-selected-text-format="count">
+                                    {% tag_options_text_choices class_name='DatasetSelectList' values=dataset_ids blank_option=True blank_text="전체" blank_value="all" project_type="AH03" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 display_block">등급: </label>
+                                <select class="form-control w-100px pr-0 pl-0 selectpicker" name="grade"
+                                        id="select_grade">
+                                    {% tag_options_text_choices class_name='MemberGrade' value=selected_grade blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입경로: </label>
+                                <select class="form-control w-205px pr-0 pl-0 selectpicker" name="join_source"
+                                        id="select_join_source">
+                                    {% tag_options_text_choices class_name='member_join_source' value=selected_join_source blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">가입일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_join_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="join_date" id="set_join_date"
+                                           value="{{ join_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">수정일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_modf_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="modf_date" id="set_modf_date"
+                                           value="{{ modf_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">작업일자: </label>
+                                <div class='input-group w-205px' id='dateRangePicker_job_date'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="기간 선택"
+                                           name="job_date" id="set_job_date"
+                                           value="{{ job_date|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">제한여부: </label>
+                                <select class="form-control w-70px pr-0 pl-0 selectpicker" name="limit_yn"
+                                        id="select_limit_yn">
+                                    {% tag_options_text_choices class_name='UseType' value=selected_limit_yn blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="어노테이터 이메일, 전화번호, 이름 검색" value=searched_annotator_info_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if searched_annotator_info_word is not None and searched_annotator_info_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_annotator_info_word text_limit=70 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                    <input type="hidden" name="sort_criterion" id="sort_criterion" value="{{ sort_criterion }}">
+                    <input type="hidden" name="upDown" id="upDown" value="{{ upDown }}">
+                    <div class="card-body-content">
+                        <div class="datatable-default">
+                            <div style="min-height: 961px">
+                                <table class="mb-0 table min-w-1586px">
+                                    <thead class="thead-dark">
+                                    <tr>
+                                        <th rowspan="2"
+                                            class="sort sort_default"
+                                            data-sort-criterion="id"
+                                            data-upDown="">
+                                            #
+                                        </th>
+                                        <th rowspan="2"
+                                            class="sort sort_default"
+                                            data-sort-criterion="dataset_name"
+                                            data-upDown="">
+                                            데이터세트명
+                                        </th>
+                                        <th colspan="5" class="pt05rem_pb05rem">어노테이터 정보</th>
+                                        <th rowspan="2"
+                                            class="sort sort_default"
+                                            data-sort-criterion="total_count"
+                                            data-upDown="">
+                                            전체 건수
+                                        </th>
+                                        <th colspan="4" class="pt05rem_pb05rem" style="border-left: none !important;">
+                                            검수 집계 (개 / %)
+                                        </th>
+                                        <th rowspan="2"
+                                            class="sort sort_default_middle"
+                                            data-sort-criterion="limit_count"
+                                            data-upDown="">
+                                            작업제한량<br>(일일)<br><span style="color: white !important; position: relative; left: 8px;">0 : 무제한</span>
+                                        </th>
+                                        <th rowspan="2">작업<br>제한여부<br>Y : 작업불가</th>
+                                        <th rowspan="2">Actions</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="sort sort_default sub_th"
+                                            data-sort-criterion="email"
+                                            data-upDown="">
+                                            이메일
+                                        </th>
+                                        <th class="sort sort_default sub_th"
+                                            data-sort-criterion="name"
+                                            data-upDown="">
+                                            이름
+                                        </th>
+                                        <th class="sort sort_default sub_th"
+                                            data-sort-criterion="tel_no"
+                                            data-upDown="">
+                                            연락처
+                                        </th>
+                                        <th class="pt-0 pb-0 sort sort_default sub_th"
+                                            data-sort-criterion="project_grade"
+                                            data-upDown="">
+                                            등급
+                                        </th>
+                                        <th class="sort sort_default sub_th"
+                                            data-sort-criterion="join_source"
+                                            data-upDown="">
+                                            가입경로
+                                        </th>
+                                        <th class="sort sort_default sub_th min-w-120px"
+                                            data-sort-criterion="initial_count"
+                                            data-upDown="">
+                                            초기
+                                        </th>
+                                        <th class="sort sort_default sub_th min-w-120px"
+                                            data-sort-criterion="complete_count"
+                                            data-upDown="">
+                                            승인
+                                        </th>
+                                        <th class="sort sort_default sub_th min-w-120px"
+                                            data-sort-criterion="reject_count"
+                                            data-upDown="">
+                                            반려
+                                        </th>
+                                        <th class="sort sort_default sub_th min-w-120px"
+                                            data-sort-criterion="accumulated_reject_count"
+                                            data-upDown="">
+                                            반려(누적)
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% if total_count != 0 %}
+                                        {% for item in annotator_list %}
+                                            <tr class="record {% if forloop.last and blank_count > 0 %} thick_bottom_border {% endif %}">
+                                                <input type="hidden" name="annotator_id" value="{{ item.id }}">
+                                                <input type="hidden" name="dataset_id" value="{{ item.dataset_id }}">
+                                                <input type="hidden" name="inspection_status_reject_count"
+                                                       value="{{ item.inspection_status_reject_count|default_if_none:0 }}">
+                                                <input type="hidden" name="inspection_status_initial_count"
+                                                       value="{{ item.inspection_status_initial_count|default_if_none:0 }}">
+                                                <td class="row_num">{{ forloop.counter0|page_seq_print:annotator_list }}</td>
+                                                <td class="thick_left_border" style="text-align: left">{{ item.dataset.dataset_name }}</td>
+                                                <td class="thick_left_border">{{ item.member.email }}</td>
+                                                <td>{{ item.member.name }}</td>
+                                                <td>
+                                                    {% advanced_default_if_none value=item.member.tel_no default_text="미입력" %}
+                                                </td>
+                                                <td>
+                                                    {{ item.member.id|get_member_grade_name|safe }}
+                                                </td>
+                                                <td>
+                                                    {% advanced_default_if_none value=item.member.memberaddition2member.get_member_join_source_display default_text="미등록" %}
+                                                </td>
+                                                <td class="thick_left_border">{{ item.total_count|default_if_none:0|intcomma }}개</td>
+                                                <td class="thick_left_border">
+                                                    {{ item.inspection_status_initial_count|default_if_none:0|intcomma }}개
+                                                    /
+                                                    {{ item.inspection_status_initial_count|get_rate:item.total_count }}%
+                                                </td>
+                                                <td>
+                                                    {{ item.inspection_status_complete_count|default_if_none:0|intcomma }}개
+                                                    /
+                                                    {{ item.inspection_status_complete_count|get_rate:item.total_count }}%
+                                                </td>
+                                                <td>
+                                                    {{ item.inspection_status_reject_count|default_if_none:0|intcomma }}개
+                                                    /
+                                                    {{ item.inspection_status_reject_count|get_rate:item.total_count }}%
+                                                </td>
+                                                <td>
+                                                    {{ item.accumulated_reject_count|default_if_none:0|intcomma }}개
+                                                    /
+                                                    {{ item.accumulated_reject_count|get_rate:item.total_count }}%
+                                                </td>
+                                                <td class="thick_left_border">
+                                                    <input class="job_limit_count"
+                                                           style="width: 64px !important; text-align: right"
+                                                           type="text"
+                                                           pattern="[0-9]+"
+                                                           oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                                           name="job_limit_count"
+                                                           data-limit-count="{{ item.limit_count|default_if_none:0 }}"
+                                                           value="{{ item.limit_count|default_if_none:0 }}">
+                                                </td>
+                                                <td>
+                                                    <select class="form-control w-80px selectpicker job_limit_yn"
+                                                            name="job_limit_yn"
+                                                            data-limit-yn="{{ item.limit_yn }}">
+                                                        {% tag_options_text_choices class_name='UseType' value=item.limit_yn blank_option=False %}
+                                                    </select>
+                                                </td>
+                                                <td class="thick_left_border">
+                                                    <button type="button" title="저장"
+                                                            data-toggle="tooltip" data-trigger="hover"
+                                                            class="btn actions-btn btn-secondary save-btn" disabled>
+                                                        <i class="fas fa-save"></i>
+                                                    </button>
+                                                    <button type="button" title="검수 초기 상태 일괄 승인하기"
+                                                            data-toggle="tooltip" data-trigger="hover"
+                                                            class="btn actions-sub-btn {% if item.inspection_status_initial_count is None %} btn-secondary {% else %} btn-success {% endif %} inspection-btn"
+                                                            {% if item.inspection_status_initial_count is None %}disabled{% endif %}>
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" title="검수 반려 상태 일괄 회수하기"
+                                                            data-toggle="tooltip" data-trigger="hover"
+                                                            class="btn actions-sub-btn {% if item.inspection_status_reject_count is None %} btn-secondary {% else %} btn-instagram {% endif %} collection-btn"
+                                                            {% if item.inspection_status_reject_count is None %}disabled{% endif %}>
+                                                        <i class="fas fa-cut"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        {% for i in "x"|rjust:blank_count %}
+                                            {% if blank_count != 0 %}
+                                                <tr></tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr style="height: 870px !important;">
+                                            {% td_search_fail_message searched_word=searched_annotator_info_word text_limit=70 search_fail_message="검색은 어노테이터의 이름, 이메일, 연락처에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                        </tr>
+                                    {% endif %}
+                                    <tr class="table_end">
+                                        <td colspan="12" class="blr6px"></td>
+                                        <td>
+                                            <input class="all_job_limit_count"
+                                                   style="width: 64px !important; text-align: right"
+                                                   type="text"
+                                                   pattern="[0-9]+"
+                                                   name="all_job_limit_count"
+                                                   value="0"
+                                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                            >
+                                        </td>
+                                        <td>
+                                            <select class="form-control w-80px selectpicker all_job_limit_yn"
+                                                    name="all_job_limit_yn">
+                                                {% tag_options_text_choices class_name='UseType' blank_option=True %}
+                                            </select>
+                                        </td>
+                                        <td class="brr6px">
+                                            <button type="button" title="전체 저장"
+                                                    data-toggle="tooltip" data-trigger="hover"
+                                                    class="btn actions-btn btn-secondary all-save-btn">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn actions-btn btn-secondary visibility_hidden">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn actions-btn btn-secondary visibility_hidden">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=annotator_list paginator_range=paginator_range total_count=total_count %}
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        set_daterangepicker('#dateRangePicker_join_date', {title: '가입일자 필터', maxDate: new Date()});
+        set_daterangepicker('#dateRangePicker_modf_date', {title: '수정일자 필터', maxDate: new Date()});
+        set_daterangepicker('#dateRangePicker_job_date', {title: '작업일자 필터', maxDate: new Date()});
+
+        const changed_record_idx_set = new Set();
+
+        // 하나의 tr의 변경을 감지함.
+        const detect_tr_change = (tr) => {
+            const row_num = tr.find("td.row_num").text();
+            if (row_num === "")
+                return;
+            const idx = row_num >= 16 ? row_num - 16 * ({{ page }} -1) + 1 : row_num - 1;
+            const origin_job_limit_count = Number(tr.find("input.job_limit_count").data('limit-count'));
+            const entered_job_limit_count = Number(tr.find("input.job_limit_count").val());
+
+            const origin_job_limit_yn = tr.find("select.job_limit_yn").data("limit-yn");
+            const selected_job_limit_yn = tr.find("select.job_limit_yn").val();
+
+            let is_changed = false;
+
+            if (origin_job_limit_count !== entered_job_limit_count)
+                is_changed = true
+
+            if (origin_job_limit_yn !== selected_job_limit_yn)
+                is_changed = true
+
+            if (!is_changed) { // 수정 버튼 비활성
+                tr.find('.actions-btn').attr('disabled', true);
+                tr.find('.actions-btn').removeClass('btn-light-skype');
+                tr.find('.actions-btn').addClass('btn-secondary');
+                changed_record_idx_set.delete(idx)
+            } else {
+                tr.find('.actions-btn').attr('disabled', false);
+                tr.find('.actions-btn').addClass('btn-light-skype');
+                tr.find('.actions-btn').removeClass('btn-secondary');
+                changed_record_idx_set.add(idx)
+            }
+
+            if (changed_record_idx_set.size > 0) {
+                $(".all-save-btn").attr('disabled', false);
+                $(".all-save-btn").addClass('btn-skype');
+                $(".all-save-btn").removeClass('btn-secondary');
+            } else {
+                $(".all-save-btn").attr('disabled', true);
+                $(".all-save-btn").addClass('btn-secondary');
+                $(".all-save-btn").removeClass('btn-skype');
+            }
+        }
+
+        // 한 번에 모든 tr의 변경을 감지
+        const detect_all_tr_change = () => {
+            for (let count = 0; count < 15; count++) {
+                const tr = $($('.record')[count]);
+                if (tr.val() === undefined) {
+                    break;
+                }
+                detect_tr_change(tr)
+            }
+        }
+
+        $(document).on("change", "input.job_limit_count, select.job_limit_yn", (e) => {
+            const tr = $(e.currentTarget).parents('tr')
+            detect_tr_change(tr)
+        })
+
+        $('.all_job_limit_count').on('input', e => {
+            const target = $(e.currentTarget);
+            if (Number(target.val()) > 10000) {
+                // 초과하면 변경하지 않고 입력 취소
+                target.val(target.val().slice(0, -1));
+            } else {
+                // 변경
+                $('.job_limit_count').val(target.val())
+            }
+            detect_all_tr_change();
+        });
+
+        $('.job_limit_count').on('input', e => {
+            const target = $(e.currentTarget);
+            const tr = target.parents("tr");
+            if (target.val() !== "") {
+                if (Number(target.val()) > 10000)
+                    target.val(target.val().slice(0, -1));
+            }
+
+            detect_tr_change(tr);
+        });
+
+        // 전체 limit_count를 조정해주는 input이 포커스 잃었을 때
+        $('.all_job_limit_count').focusout(e => {
+            const target = $(e.currentTarget);
+            // 포커싱을 잃었는데, value 가 ""라면 0을 넣어주고 개별 limit_count 값을 원래의 값으로 돌아감.
+            if (target.val() === "") {
+                target.val(0);
+                for (let count = 0; count < 15; count++) {
+                    $($('.job_limit_count')[count]).val($($('.job_limit_count')[count])[0].dataset['limitCount'])
+                }
+            }
+            detect_all_tr_change();
+        })
+
+        // 개별 limit_count를 조정해주는 input이 포커스 잃었을 때
+        $('.job_limit_count').focusout(e => {
+            const target = $(e.currentTarget);
+            const tr = target.parents("tr");
+            if (target.val() === "") {
+                target.val(0);
+            }
+            detect_tr_change(tr);
+        })
+
+        // 일괄 제한여부 변경 selct 변경감지
+        $('.all_job_limit_yn').on('change', function () {
+            if ($(".all_job_limit_yn option:selected").text() === "선택") {
+                for (let count = 1; count < 30; count += 2) {
+                    $($('.job_limit_yn')[count]).selectpicker('val', $($('.job_limit_yn')[count]).data("limit-yn"));
+                }
+            } else if ($(".all_job_limit_yn option:selected").text() === "Y") {
+                $('.job_limit_yn').selectpicker('val', "Y");
+            } else if ($(".all_job_limit_yn option:selected").text() === "N") {
+                $('.job_limit_yn').selectpicker('val', "N");
+            }
+            detect_all_tr_change();
+        });
+
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+        $("#set_join_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_modf_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_limit_yn').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_join_source').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#set_job_date").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#select_grade").on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#search_annotator_info").keypress((e) => {
+            if (e.which === 13) {
+                $("#page").val(1);
+                $('#searchForm').submit();
+            }
+        })
+
+        $(".inspection-btn").click(function (e) {
+            const annotator_id = $(this).parents("tr").find("[name='annotator_id']").val();
+            const dataset_id = $(this).parents("tr").find("[name='dataset_id']").val();
+            const inspection_status_initial_count = $(this).parents("tr").find("[name='inspection_status_initial_count']").val();
+            swalWithBootstrapButtons.fire({
+                title: '검수 일괄 승인',
+                text: '어노테이터가 검수받아야 할 총 ' + inspection_status_initial_count + "건을 모두 승인 처리하시겠습니까?(건수는 정확하지 않으며, 실시간 작업에 따라 더 많이 승인될수 있습니다.)",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '승인',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url 'job:talk_annotator_inspection' %}',
+                        method: 'GET',
+                        data: {
+                            annotator_id: annotator_id,
+                            dataset_id: dataset_id
+                        },
+                        success: function (data) {
+                            if (data.result == true) {
+                                swalFire("일괄 승인 성공", "어노테이터의 검수 대기 중인 모든 작업이 승인 처리되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("일괄 승인 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        $(".collection-btn").click(function (e) {
+            const annotator_id = $(this).parents("tr").find("[name='annotator_id']").val();
+            const inspection_status_reject_count = $(this).parents("tr").find("[name='inspection_status_reject_count']").val();
+            swalWithBootstrapButtons.fire({
+                title: '반려건 회수',
+                text: '검수 반려된 총 ' + inspection_status_reject_count + "건을 회수 처리하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '회수',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url 'job:talk_annotator_collection' %}',
+                        method: 'GET',
+                        data: {
+                            annotator_id: annotator_id,
+                            inspection_status_reject_count: inspection_status_reject_count
+                        },
+                        success: function (data) {
+                            if (data.result == true) {
+                                swalFire("반려건 회수 성공", "어노테이터의 모든 반려건이 회수 처리되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("반려건 회수 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // 개별 저장
+        $(".save-btn").click(function (e) {
+            const tr = $(e.currentTarget).parents("tr");
+            const row_num = $(e.currentTarget).parents("tr").find("td.row_num").text();
+            const completed_idx = row_num >= 16 ? row_num - 16 * ({{ page }} -1) + 1 : row_num - 1;
+
+            const annotator_id = $(this).parents("tr").find("[name='annotator_id']").val();
+            const job_limit_count = $(this).parents("tr").find("[name='job_limit_count']").val();
+            const job_limit_yn = $(this).parents("tr").find("[name='job_limit_yn']").val();
+
+            const save_btn = $(e.currentTarget);
+            swalWithBootstrapButtons.fire({
+                title: '제한 정보 저장',
+                text: "정말 저장하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '저장',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url 'job:talk_annotator_limit_modify' %}',
+                        method: 'GET',
+                        data: {
+                            annotator_id: annotator_id,
+                            job_limit_count: job_limit_count,
+                            job_limit_yn: job_limit_yn
+                        },
+                        success: function (data) {
+                            if (data.result == true) {
+                                swalFire("저장 성공", "정보가 저장되었습니다.", "success", "확인").then(() => {
+                                    tr.find("input.job_limit_count").data('limit-count', data.new_data[0]);
+                                    tr.find("input.job_limit_count").attr('data-limit-count', data.new_data[0]);
+                                    tr.find("select.job_limit_yn").data("limit-yn", data.new_data[1]);
+                                    tr.find("select.job_limit_yn").attr('data-limit-yn', data.new_data[1]);
+
+                                    save_btn.addClass('btn-secondary');
+                                    save_btn.removeClass('btn-light-skype');
+                                    save_btn.prop("disabled", true);
+
+                                    changed_record_idx_set.delete(completed_idx)
+                                    if (changed_record_idx_set.size > 0) {
+                                        $(".all-s").attr('disabled', false);
+                                        $(".all-save-btn").addClass('btn-skype');
+                                        $(".all-save-btn").removeClass('btn-secondary');
+                                    } else {
+                                        $(".all-save-btn").attr('disabled', true);
+                                        $(".all-save-btn").addClass('btn-secondary');
+                                        $(".all-save-btn").removeClass('btn-skype');
+                                    }
+                                });
+                            } else {
+                                swalFire("저장 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        // 일괄 저장
+        $(".all-save-btn").click(function () {
+            let to_be_changed_items = []
+            for (let count = 0; count < 15; count++) {
+                const tr = $($(".record")[count]);
+                const annotator_id = tr.find("[name='annotator_id']").val();
+                if (!annotator_id)
+                    break;
+                const job_limit_count = tr.find("[name='job_limit_count']").val();
+                const job_limit_yn = tr.find("[name='job_limit_yn']").val();
+                to_be_changed_items.push({annotator_id, job_limit_count, job_limit_yn})
+            }
+            const data = {"to_be_changed_items": to_be_changed_items}
+            data['to_be_changed_items'] = JSON.stringify(data['to_be_changed_items'])
+
+            swalWithBootstrapButtons.fire({
+                title: '제한 정보 일괄 저장',
+                text: "정말 일괄 저장하시겠습니까?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '저장',
+                cancelButtonText: '취소',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url 'job:talk_annotator_limit_modify' %}',
+                        method: 'POST',
+                        data: data,
+                        success: function (data) {
+                            if (data.result == true) {
+                                swalFire("일괄 저장 성공", "정보가 일괄 저장되었습니다.", "success", "확인").then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                swalFire("일괄 저장 실패", data.error, "error", "확인");
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        $("#talk-annotator-list-excel").click(function () {
+            const dataset_ids = $('#select_dataset_name').val();
+            const join_source = $("#select_join_source option:selected").val();
+            const join_date = $("#set_join_date").val();
+            const modf_date = $("#set_modf_date").val();
+            const job_date = $("#set_job_date").val();
+            const limit_yn = $("#select_limit_yn option:selected").val();
+            const grade = $("#select_grade").val();
+            const searched_word = $("#table-data-search").val();
+            const sort_criterion = $("#sort_criterion").val();
+            const upDown = $("#upDown").val();
+
+            // 엑셀 쿼리스트링 만드는 곳
+            const params = {dataset_id: dataset_ids, join_source, join_date, modf_date, job_date, limit_yn, grade, searched_word, sort_criterion, upDown};
+            const qs = jQuery.param(params, true);
+
+            window.open('{% url 'job:talk_annotator_list_excel' %}?' + qs)
+        });
+    </script>
+{% endblock %}

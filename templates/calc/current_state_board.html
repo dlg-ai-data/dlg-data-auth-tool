@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% load static %}
+{% load html_extras %}
+{% load humanize %}
+{% block content %}
+    <div class="pl-0 pr-0 ml-8 mr-8 page-content">
+        <div class="page-content-wrapper">
+            <div class="card card-custom h-100">
+                <form action="{% url 'calc:current_state_board' %}" method="GET" id="searchForm">
+                    <div class="card-header p-2-4-2-0 card-header-div d-flex align-items-center row">
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-grass ml-7px"
+                                id="current_state_board-excel"
+                                title="정산현황 엑셀"
+                                data-trigger="hover"
+                                data-toggle="tooltip">
+                            <i class="fas fa-download pr-0 pl-1"></i>
+                        </button>
+                        {% if user.is_admin == True %}
+                        <button type="button"
+                                class="btn btn-text table_function btn-light-warning ml-3"
+                                style="{% if calc_status_initial_count == 0 %} cursor: not-allowed; opacity: 0.3; {% endif %}"
+                                id="calc_confirm_btn"
+                                data-toggle="tooltip"
+                                data-trigger="hover"
+                                {% if calc_status_initial_count > 0 %}
+                                title="정산 확정하기"
+                                data-modal-toggle="modal"
+                                data-target="#calcConfirmModal"
+                                {% else %}
+                                title="정산 확정하기(현재 정산 진행중인 건이 없음.)"
+                                {% endif %}>
+                            <i class="fas fa-gavel pr-0 pl-1"></i>
+                        </button>
+                        {% endif %}
+                        <div class="mr-3 row justify-content-end ml-auto">
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">등급: </label>
+                                <select class="form-control w-150px pr-0 pl-0 selectpicker" name="grade"
+                                        id="select_grade">
+                                    {% tag_options_text_choices class_name='MemberGrade' value=selected_grade blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">계좌 여부: </label>
+                                <select class="form-control w-80px pr-0 pl-0 selectpicker" name="bankyn"
+                                        id="select_bankyn">
+                                    {% tag_options_text_choices class_name='UseType' value=selected_bankyn blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">정산 월 선택: </label>
+                                <div class='input-group w-130px'>
+                                    <input type='text' class="form-control date_filter" readonly placeholder="선택"
+                                           name="calc_date_month" id="set_calc_date_month"
+                                           value="{{ set_calc_date_month|default_if_none:"" }}"/>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-14px">
+                                <label class="mb-0 mr-4 display_block">정산 상태: </label>
+                                <select class="form-control w-120px pr-0 pl-0 selectpicker" name="calc_status"
+                                        id="select_calc_status">
+                                    {% tag_options_text_choices class_name='CalcStatus' value=selected_calc_status blank_option=True blank_text="전체" blank_value="all" %}
+                                </select>
+                            </div>
+                            <div class="search_div_css">
+                                {% div_input_search tooltip_text="이메일, 이름 검색" value=searched_word %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if isSearched and searched_word != '' %}
+                        <div class="align-items-center text-center">
+                            {% search_result_highlight_message word=searched_word text_limit=200 %}
+                        </div>
+                    {% endif %}
+                    <input type="hidden" name="page" id="page" value="{{ page|default_if_none:1 }}">
+                </form>
+                <div class="card-body-content">
+                    <div class="datatable-default">
+                        <div style="min-height: 900px">
+                            <table class="mb-0 table">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th rowspan="2">#</th>
+                                    <th rowspan="2">이메일</th>
+                                    <th rowspan="2">이름</th>
+                                    <th rowspan="2">정산월</th>
+                                    <th rowspan="2">지급계좌</th>
+                                    <th rowspan="2">정산상태</th>
+                                    <th rowspan="2" class="w-100px">정산일자</th>
+                                    {#                                <th rowspan="2">단가</th>#}
+                                    {#                                    <th rowspan="2">정산유형</th>#}
+                                    <th rowspan="2">지급확정일자</th>
+
+                                    <th rowspan="2">등급</th>
+                                    <th rowspan="2">지급금액</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if record_count != 0 %}
+                                    {% for item in all_items %}
+                                        <tr {% if forloop.last and blank_count > 0 %}
+                                            class="thick_bottom_border" {% endif %}>
+                                            <td>{{ forloop.counter0|page_seq_print:all_items }}</td>
+                                            <td>{{ item.member.email }}</td>
+                                            <td>{{ item.member.name }}</td>
+                                            <td>{{ item.calc_month }}</td>
+                                            <td>
+                                                {% if item.pay_bank_code and item.pay_bank_no %}
+                                                    {{ item.get_pay_bank_code_display }}<br/>{{ item.pay_bank_no }}
+                                                {% elif item.member.memberaddition2member.bank_code and item.member.memberaddition2member.bank_no %}
+                                                    {{ item.member.memberaddition2member.get_bank_code_display }} </br> {{ item.member.memberaddition2member.bank_no }}
+                                                {% else %}
+                                                    {% advanced_default_if_none default_text="미등록" %}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.calc_status == "AN01" %}
+                                                    <span class="label label-inline label-outline-color-9"
+                                                          style="width: 63.5px;">진행중</span>
+                                                {% else %}
+                                                    <span class="label label-inline label-outline-primary">정산완료</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="two_line_date">{{ item.calc_date | date:'Y-m-d' }}</td>
+                                            {#                                        <td>{{ item.price|intcomma }}</td>#}
+                                            {#                                            <td>#}
+                                            {#                                                {% if item.calc_type == "AI01" %}#}
+                                            {#                                                    <span class="label label-inline label-outline-success">TAX</span>#}
+                                            {#                                                {% else %}#}
+                                            {#                                                    <span class="label label-inline label-outline-warning">VAT</span>#}
+                                            {#                                                {% endif %}#}
+                                            {#                                            </td>#}
+                                            <td {% if item.pay_date is not None %} class="two_line_date" {% endif %}>
+                                                {% advanced_default_if_none value=item.pay_date default_text="미지급" filter="Y-m-d (H:i)" %}
+                                            </td>
+                                            {#                                            <td>#}
+                                            {#                                                {% if item.pay_type == "AJ01" %}#}
+                                            {#                                                    <span class="label label-inline label-outline-info"#}
+                                            {#                                                          style="height: 36px !important;">포인트<br/>지급신청</span>#}
+                                            {#                                                {% else %}#}
+                                            {#                                                    <span class="label label-inline label-outline-secondary">월마감</span>#}
+                                            {#                                                {% endif %}#}
+                                            {#                                            </td>#}
+                                            <td class="thick_left_border">
+                                                {{ item.member.id|get_member_grade_name|safe }}
+                                            </td>
+                                            {#                                            <td>#}
+                                            {#                                                {% advanced_default_if_none value=item.id|get_grade_price:key default_text="0" filter="price" %}#}
+                                            {#                                            </td>#}
+                                            <td style="text-align: right">
+                                                {% advanced_default_if_none value=item.id|get_job_price|intcomma default_text="0" filter="price" %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% for i in "x"|rjust:blank_count %}
+                                        {% if blank_count != 0 %}
+                                            <tr></tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <tr style="height: 855px !important;">
+                                        {% td_search_fail_message searched_word=searched_word text_limit=200 search_fail_message="검색은 이메일과 이름에 포함된 문자열을 검사합니다." isSearched=isSearched isSelected=isSelected %}
+                                    </tr>
+                                {% endif %}
+                                <tr class="table_end">
+                                    <td colspan="30" class="blr6px brr6px"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="datatable datatable-default text-center">
+            {% include 'paginnation.html' with items=all_items paginator_range=paginator_range total_count=record_count %}
+        </div>
+    </div>
+    <!-- 정산 확정하기 모달 -->
+    <div class="modal fade" id="calcConfirmModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header h-55px">
+                    <h5 class="modal-title" id="dataset_register_modal_h5"><b>정산 확정하기</b></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <i aria-hidden="true" class="ki ki-close"></i>
+                    </button>
+                </div>
+                <form id="calc_confirm_modal_form" class="bg_fcfcfa">
+                    <div class="modal-body pb-0">
+                        <div class="form-group col-sm-12 col-lg-12">
+                            <label><b class="required_sign">정산 확정일자 선택</b></label>
+                            <div class="input-group date">
+                                <input type="text" class="form-control" readonly placeholder="확정일 선택"
+                                       id="confirm_date"/>
+                                <div class="input-group-append">
+                                   <span class="input-group-text">
+                                    <i class="la la-calendar"></i>
+                                   </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">닫기
+                        </button>
+                        <button type="submit" class="btn btn-success font-weight-bold">저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function pageForm(index) {
+            $("#page").val(index);
+            $('#searchForm').submit();
+        }
+
+        $('#select_calc_status').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_bankyn').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $('#select_grade').on('change', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+        $("#set_calc_date_month").on('input', function () {
+            $("#page").val(1);
+            $('#searchForm').submit();
+        });
+
+        $("#current_state_board-excel").click(function () {
+            const calc_status = $("#select_calc_status option:selected").val();
+            const searched_word = $("#table-data-search").val();
+            const calc_date_month = $("#set_calc_date_month").val();
+            const member_grade = $("#select_grade").val();
+
+            // 엑셀 쿼리스트링 만드는 곳
+            const params = {calc_status, searched_word, calc_date_month, member_grade};
+            const qs = jQuery.param(params, true);
+
+            window.open('{% url 'calc:current_state_board_excel' %}?' + qs)
+
+        });
+
+        $('#confirm_date').datepicker({
+            title: "정산 확정일 선택",
+            rtl: KTUtil.isRTL(),
+            todayBtn: "linked",
+            clearBtn: true,
+            todayHighlight: true,
+            templates: arrows,
+            orientation: "bottom right",
+            startDate: new Date(),
+        });
+
+        $('#set_calc_date_month').datepicker({
+            title: "정산 월 선택",
+            rtl: KTUtil.isRTL(),
+            clearBtn: true,
+            todayHighlight: true,
+            templates: arrows,
+            orientation: "bottom left",
+            format: "yyyy년 mm월",
+            viewMode: "months",
+            minViewMode: "months",
+            maxViewMode: "years"
+        });
+
+        $("#calc_confirm_modal_form").submit(function (event) {
+            event.preventDefault();
+
+            const confirm_date = $("#confirm_date").val();
+            if (confirm_date === "") {
+                swalFire("", "정산 확정일을 선택하세요.", "error", "확인");
+            } else {
+                swalWithBootstrapButtons.fire({
+                    title: '정산 확정하기',
+                    text: "계속 진행하시겠습니까?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '확인',
+                    cancelButtonText: '취소',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{% url 'calc:confirm_calc_pay' %}",
+                            method: "POST",
+                            data: {pay_date: confirm_date},
+                            success: function (data) {
+                                if (data.result === true) {
+                                    swalFire("", "정산 진행중인 데이터들이 모두 정산완료 처리되었습니다.", "success", "확인").then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    swalFire("정산 확정 실패", data.error, "error", "확인");
+                                }
+                            }
+                        });
+                    }
+                })
+            }
+        });
+    </script>
+{% endblock %}

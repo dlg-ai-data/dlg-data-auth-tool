@@ -1,0 +1,7 @@
+{% load html_extras %}
+{% for item in view_images %}
+    <div class="d-inline-block">
+        <h3>작업자 : {{ item.job_image.annotator.member.email }}</h3>
+        <img src="{{ item.url }}" alt="{{ item.alt }}" width="{{ item.width }}" height="{{ item.height }}" />
+    </div>
+{% endfor %}

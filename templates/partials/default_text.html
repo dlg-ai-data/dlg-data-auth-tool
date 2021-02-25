@@ -1,0 +1,19 @@
+{% load humanize %}
+{% load html_extras %}
+{% if is_default %}
+    <span style="{{ style }}">{{ default_text }}</span>
+{% else %}
+    {% if filter == "date_Y-m-d" %}
+        {{ value |date:"Y-m-d" }}
+    {% elif filter == 'Y-m-d (H:i)' %}
+        {{ value |date:"Y-m-d (H:i)" }}
+    {% elif filter == "first" %}
+        {{ value |first }}
+    {% elif filter == "price" %}
+        {{ value |intcomma }}
+    {% elif filter == "wiyn" %} <!-- wiyn == What is your name? -->
+        {{ value |wiyn }}
+    {% elif filter is None %}
+        {{ value }}
+    {% endif %}
+{% endif %}

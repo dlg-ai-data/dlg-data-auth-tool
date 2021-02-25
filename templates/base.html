@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    {% include '_meta.html' %}
+</head>
+<body id="kt_body" style="background: #d1d8e0;"
+      class="quick-panel-right demo-panel-right offcanvas-right header-fixed header-mobile-fixed subheader-enabled aside-enabled aside-fixed aside-minimize-hoverable page-loading">
+<div id="kt_header_mobile" class="header-mobile align-items-center header-mobile-fixed">
+    <a href="/">
+        <img alt="Logo" src="/static/images/logo.png">
+    </a>
+    <div class="d-flex align-items-center">
+        <button class="btn p-0 burger-icon burger-icon-left" id="kt_aside_mobile_toggle">
+            <span></span>
+        </button>
+    </div>
+</div>
+<div class="d-flex flex-column flex-root">
+    <div class="d-flex flex-row flex-column-fluid page">
+        {% include '_aside.html' %}
+        <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+            {#            {% include '_header.html' %}#}
+            <div class="content d-flex flex-column flex-column-fluid align-middle pb-0" id="kt_content">
+                <div class="page_body">
+                    <div class="subheader ml-8 mr-8 mt-15px subheader-transparent" id="kt_subheader">
+                        <div class="container d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+                            <div class="d-flex align-items-center flex-wrap mr-1">
+                                <div class="d-flex align-items-baseline flex-wrap mr-5">
+                                    <h3 class="text-dark font-weight-boldest my-1 mr-5">
+                                        <b>{{ view.kwargs.page_name }}</b></h3>
+                                    <ul class="breadcrumb breadcrumb-transparent breadcrumb-dot font-weight-bold p-0 my-2 font-size-sm">
+                                        <li class="breadcrumb-item">
+                                            <p class="text-muted"><b>{{ view.kwargs.app_category_name }}</b></p>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% block content %}{% endblock content %}
+                </div>
+            </div>
+            {#            {% include '_footer.html' %}#}
+        </div>
+    </div>
+</div>
+{#{% include '_user_pannel.html' %}#}
+
+<div id="kt_scrolltop" class="scrolltop">
+			<span class="svg-icon">
+				<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                     height="24px" viewBox="0 0 24 24" version="1.1">
+					<g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+						<polygon points="0 0 24 0 24 24 0 24"/>
+						<rect fill="#000000" opacity="0.3" x="11" y="10" width="2" height="10" rx="1"/>
+						<path d="M6.70710678,12.7071068 C6.31658249,13.0976311 5.68341751,13.0976311 5.29289322,12.7071068 C4.90236893,12.3165825 4.90236893,11.6834175 5.29289322,11.2928932 L11.2928932,5.29289322 C11.6714722,4.91431428 12.2810586,4.90106866 12.6757246,5.26284586 L18.6757246,10.7628459 C19.0828436,11.1360383 19.1103465,11.7686056 18.7371541,12.1757246 C18.3639617,12.5828436 17.7313944,12.6103465 17.3242754,12.2371541 L12.0300757,7.38413782 L6.70710678,12.7071068 Z"
+                              fill="#000000" fill-rule="nonzero"/>
+					</g>
+				</svg>
+			</span>
+</div>
+</body>
+</html>
